@@ -51,6 +51,19 @@ export type JobStep = {
   endedAt?: string;
 };
 
+/** A job as the web client sees it; `label` is the human name for the step. */
+export type JobDocument = {
+  id: string;
+  kitId: string;
+  type: JobType;
+  category: string | null;
+  status: JobStatus;
+  steps: (JobStep & { label: string })[];
+  error: { code: string; message: string } | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 /** A kit as the web client sees it. */
 export type KitDocument = {
   id: string;

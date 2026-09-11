@@ -1,6 +1,7 @@
 import { createApp } from "./app.js";
 import { hasLlmKey, serverEnv } from "./config/env.js";
 import { connectDb, disconnectDb } from "./db.js";
+import { recoverInterrupted } from "./jobs/runner.js";
 import { logger } from "./lib/logger.js";
 
 async function main(): Promise<void> {
@@ -11,6 +12,8 @@ async function main(): Promise<void> {
     );
   }
   await connectDb();
+  // Anything left running belonged to a process that no longer exists.
+  await recoverInterrupted();
 
   const app = createApp();
   const server = app.listen(env.PORT, () => {

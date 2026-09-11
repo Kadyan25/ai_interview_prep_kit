@@ -57,17 +57,25 @@ function focusFor(
     (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
   )[0]![0];
 
-  const texts: string[] = [];
+  // Name the requirements this day actually leans on, most-cited first, so two
+  // days covering the same set do not end up with the same label.
+  const citations = new Map<string, number>();
   for (const q of questions) {
     for (const id of q.requirement_ids) {
-      const requirement = requirements.get(id);
-      if (!requirement) continue;
-      const text = truncate(requirement.text);
-      if (!texts.includes(text)) texts.push(text);
-      if (texts.length === 3) break;
+      if (!requirements.has(id)) continue;
+      citations.set(id, (citations.get(id) ?? 0) + 1);
     }
-    if (texts.length === 3) break;
   }
+
+  const ordered = [...citations.entries()].sort((a, b) => {
+    if (b[1] !== a[1]) return b[1] - a[1];
+    return a[0].localeCompare(b[0], undefined, { numeric: true });
+  });
+
+  const texts = ordered
+    .slice(0, 2)
+    .map(([id]) => truncate(requirements.get(id)!.text))
+    .filter((text, index, all) => all.indexOf(text) === index);
 
   const label = CATEGORY_LABEL[dominant];
   const body = texts.length > 0 ? `${label}: ${texts.join(", ")}` : label;

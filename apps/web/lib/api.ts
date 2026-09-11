@@ -1,4 +1,4 @@
-import type { KitDocument, KitSummary } from "@prep/shared";
+import type { JobDocument, KitDocument, KitInput, KitSummary } from "@prep/shared";
 
 export class ApiError extends Error {
   readonly code: string;
@@ -77,4 +77,20 @@ export const api = {
   listKits: () => apiFetch<{ kits: KitSummary[] }>("/kits"),
   getKit: (id: string) => apiFetch<{ kit: KitDocument }>(`/kits/${id}`),
   deleteKit: (id: string) => apiFetch<{ ok: true }>(`/kits/${id}`, { method: "DELETE" }),
+
+  createKit: (input: KitInput & { force?: boolean }) =>
+    apiFetch<CreateKitResponse>("/kits", { method: "POST", body: JSON.stringify(input) }),
+  createKitBatch: (kits: KitInput[]) =>
+    apiFetch<{ kits: CreateKitResponse[] }>("/kits/batch", {
+      method: "POST",
+      body: JSON.stringify({ kits }),
+    }),
+  getJob: (id: string) => apiFetch<{ job: JobDocument }>(`/kits/${id}/job`),
+  retryKit: (id: string) => apiFetch<{ jobId: string }>(`/kits/${id}/retry`, { method: "POST" }),
+};
+
+export type CreateKitResponse = {
+  kit: KitDocument;
+  jobId: string | null;
+  existing: boolean;
 };

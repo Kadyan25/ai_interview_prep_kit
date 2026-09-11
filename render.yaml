@@ -1,0 +1,44 @@
+# Render blueprint for the API. The web app deploys separately on Vercel.
+# Create the service from this file, then set the secret env vars in the
+# dashboard — they are marked sync:false so they are never committed.
+services:
+  - type: web
+    name: prep-kit-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci
+    startCommand: npm run start -w apps/api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: LLM_PRIMARY
+        value: groq
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash
+      - key: LLM_CONCURRENCY
+        value: "2"
+      - key: CRAWL_MAX_PAGES
+        value: "12"
+      - key: FETCH_TIMEOUT_MS
+        value: "10000"
+      # Off in production: the crawler must not be able to reach private addresses.
+      - key: ALLOW_PRIVATE_URLS
+        value: "false"
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: WEB_ORIGIN
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false

@@ -1,17 +1,21 @@
-import { EmptyState } from "@/components/ui/EmptyState";
-import { LinkButton } from "@/components/ui/LinkButton";
+import { BatchUpload } from "@/components/kits/BatchUpload";
+import { CreateKitForm } from "@/components/kits/CreateKitForm";
 
 export const metadata = { title: "New kit · Interview Prep Kit" };
 
 export default function NewKitPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-zinc-900">New kit</h1>
-      <EmptyState
-        title="Kit generation is not wired up yet"
-        description="The create form lands with the generation pipeline."
-        action={<LinkButton href="/kits" variant="secondary">Back to my kits</LinkButton>}
-      />
+      <div>
+        <h1 className="text-xl font-semibold text-zinc-900">New kit</h1>
+        <p className="text-sm text-muted">
+          Paste the posting and give the company URL. You get a brief, a question bank tied to their
+          requirements, flashcards and a day-by-day plan.
+        </p>
+      </div>
+
+      <CreateKitForm />
+      <BatchUpload />
     </div>
   );
 }

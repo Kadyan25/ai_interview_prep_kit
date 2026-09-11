@@ -33,3 +33,12 @@ export function currentUserId(req: Request): string {
   if (!req.user) throw new AppError("UNAUTHORIZED", "Sign in to continue.");
   return req.user.id;
 }
+
+/** Express types a route param as possibly absent; a missing one is a 404. */
+export function pathParam(req: Request, name: string): string {
+  const value = req.params[name];
+  if (typeof value !== "string" || value.length === 0) {
+    throw new AppError("NOT_FOUND", "That resource does not exist.");
+  }
+  return value;
+}
