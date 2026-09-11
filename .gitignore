@@ -1,0 +1,31 @@
+node_modules/
+dist/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.local
+.env.*.local
+
+# planning docs stay local
+CLAUDE.md
+architecture.md
+build-plan.md
+handoff.md
+session.md
+issues.md
+git-state.md
+
+# batch outputs
+out.json
+kits.json
+*.out.json
+
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+next-env.d.ts
+software-engineer-assignment.pdf
