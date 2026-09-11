@@ -32,7 +32,7 @@ const coreSchema = z.object({
       .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
       .default("info"),
     GEMINI_API_KEY: optionalString,
-    GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
+    GEMINI_MODEL: z.string().default("gemini-3.5-flash"),
     GROQ_API_KEY: optionalString,
     GROQ_MODEL: z.string().default("llama-3.3-70b-versatile"),
     TAVILY_API_KEY: optionalString,

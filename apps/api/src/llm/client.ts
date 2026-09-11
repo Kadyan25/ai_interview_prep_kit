@@ -76,9 +76,14 @@ export function createLlmClient(
     release();
   }
 
-  function pickProvider(): LlmProvider {
-    if (fallback && primaryPausedUntil > now()) return fallback;
-    return primary;
+  /**
+   * The order to try providers in for one call. The primary goes first unless it
+   * is in a rate-limit cooldown, in which case the fallback leads and the primary
+   * is still kept as a last resort.
+   */
+  function providerOrder(): LlmProvider[] {
+    if (fallback && primaryPausedUntil > now()) return [fallback, primary];
+    return fallback ? [primary, fallback] : [primary];
   }
 
   function noteRateLimit(provider: LlmProvider): void {
@@ -106,34 +111,57 @@ export function createLlmClient(
     return Math.min(2000 * 2 ** attempt + jitter, 30_000);
   }
 
+  /**
+   * Tries each provider in turn. A provider is given a few attempts with backoff
+   * for transient failures, and abandoned immediately for a permanent one — a
+   * retired model name or a bad key returns 404, and no amount of waiting fixes
+   * that. Either way the next provider still gets its turn, so one broken
+   * provider does not take the run down.
+   */
   async function callOnce(system: string, user: string, maxOutputTokens?: number): Promise<string> {
+    const order = providerOrder();
+    const attemptsEach = order.length > 1 ? Math.max(2, Math.ceil(maxAttempts / 2)) : maxAttempts;
     let lastError: LlmHttpError | null = null;
 
-    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-      const provider = pickProvider();
-      await spaceOut();
-      try {
-        const text = await provider.complete({ system, user, maxOutputTokens });
-        noteSuccess(provider);
-        return text;
-      } catch (error) {
-        const httpError =
-          error instanceof LlmHttpError
-            ? error
-            : new LlmHttpError(provider.name, error instanceof Error ? error.message : String(error));
-        lastError = httpError;
+    for (const provider of order) {
+      for (let attempt = 0; attempt < attemptsEach; attempt += 1) {
+        await spaceOut();
+        try {
+          const text = await provider.complete({ system, user, maxOutputTokens });
+          noteSuccess(provider);
+          return text;
+        } catch (error) {
+          const httpError =
+            error instanceof LlmHttpError
+              ? error
+              : new LlmHttpError(
+                  provider.name,
+                  error instanceof Error ? error.message : String(error),
+                );
+          lastError = httpError;
 
-        if (httpError.isRateLimit) noteRateLimit(provider);
-        if (!httpError.isRetryable || attempt === maxAttempts - 1) break;
+          if (httpError.isRateLimit) noteRateLimit(provider);
 
-        const waitMs = backoffMs(attempt, httpError);
+          const lastAttemptHere = attempt === attemptsEach - 1;
+          if (!httpError.isRetryable || lastAttemptHere) break;
+
+          const waitMs = backoffMs(attempt, httpError);
+          onRetry?.({
+            provider: provider.name,
+            attempt: attempt + 1,
+            waitMs,
+            reason: httpError.message,
+          });
+          await sleep(waitMs);
+        }
+      }
+      if (order.length > 1) {
         onRetry?.({
           provider: provider.name,
-          attempt: attempt + 1,
-          waitMs,
-          reason: httpError.message,
+          attempt: attemptsEach,
+          waitMs: 0,
+          reason: `giving up on ${provider.name}: ${lastError?.message ?? "unknown error"}`,
         });
-        await sleep(waitMs);
       }
     }
 

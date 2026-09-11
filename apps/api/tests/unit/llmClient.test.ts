@@ -121,6 +121,54 @@ describe("llm client", () => {
     expect(secondary.calls).toHaveLength(1);
   });
 
+  it("moves to the fallback immediately when the primary rejects the request outright", async () => {
+    // A retired model name or a bad key returns 404: waiting cannot fix it, but
+    // the other provider might still answer.
+    const primary = scriptedProvider("gemini", [
+      new LlmHttpError("gemini", "model no longer available", 404),
+    ]);
+    const secondary = scriptedProvider("groq", ['{"answer":"from groq"}']);
+
+    const client = createLlmClient([primary.provider, secondary.provider], options);
+
+    await expect(
+      client.generateJson({ task: "t", system: "s", user: "u", schema }),
+    ).resolves.toEqual({ answer: "from groq" });
+    expect(primary.calls).toHaveLength(1);
+    expect(secondary.calls).toHaveLength(1);
+  });
+
+  it("moves to the fallback when the primary keeps failing transiently", async () => {
+    const primary = scriptedProvider("gemini", [
+      new LlmHttpError("gemini", "high demand", 503),
+      new LlmHttpError("gemini", "high demand", 503),
+      new LlmHttpError("gemini", "high demand", 503),
+    ]);
+    const secondary = scriptedProvider("groq", ['{"answer":"from groq"}']);
+
+    const client = createLlmClient([primary.provider, secondary.provider], options);
+
+    await expect(
+      client.generateJson({ task: "t", system: "s", user: "u", schema }),
+    ).resolves.toEqual({ answer: "from groq" });
+    expect(secondary.calls).toHaveLength(1);
+  });
+
+  it("fails only when every provider has been tried", async () => {
+    const primary = scriptedProvider("gemini", [
+      new LlmHttpError("gemini", "gone", 404),
+    ]);
+    const secondary = scriptedProvider("groq", [new LlmHttpError("groq", "gone too", 404)]);
+
+    const client = createLlmClient([primary.provider, secondary.provider], options);
+
+    await expect(
+      client.generateJson({ task: "t", system: "s", user: "u", schema }),
+    ).rejects.toMatchObject({ code: "LLM_UNAVAILABLE" });
+    expect(primary.calls).toHaveLength(1);
+    expect(secondary.calls).toHaveLength(1);
+  });
+
   it("re-asks once with the validation problems attached", async () => {
     const { provider, calls } = scriptedProvider("gemini", [
       '{"wrong":"shape"}',
