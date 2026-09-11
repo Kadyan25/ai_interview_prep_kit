@@ -15,7 +15,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ItemStateMap, KitBody, Op, Question, QuestionCategory } from "@prep/shared";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
@@ -37,14 +37,18 @@ export function QuestionList({
   onApply,
   locked,
   regenerateAction,
+  focusQuestionId,
 }: {
   body: KitBody;
   itemState: ItemStateMap;
   onApply: (ops: Op[]) => void;
   locked: boolean;
   regenerateAction: (category: QuestionCategory) => React.ReactNode;
+  /** Set when the user clicked a question in the schedule. */
+  focusQuestionId?: string | null;
 }) {
   const [category, setCategory] = useState<QuestionCategory>("technical");
+  const listRef = useRef<HTMLUListElement>(null);
   const [pendingDelete, setPendingDelete] = useState<Question | null>(null);
   const [adding, setAdding] = useState(false);
 
@@ -56,6 +60,21 @@ export function QuestionList({
 
   const inCategory = body.questions.filter((q) => q.category === category);
   const ids = inCategory.map((q) => q.id);
+
+  // Following a link from the schedule switches to the right category and
+  // brings the question into view, rather than dropping the user at the top.
+  useEffect(() => {
+    if (!focusQuestionId) return;
+    const target = body.questions.find((q) => q.id === focusQuestionId);
+    if (!target) return;
+    setCategory(target.category);
+    const timer = setTimeout(() => {
+      listRef.current
+        ?.querySelector(`[data-question-id="${focusQuestionId}"]`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [focusQuestionId, body.questions]);
 
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -112,9 +131,17 @@ export function QuestionList({
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-            <ul className="space-y-3">
+            <ul ref={listRef} className="space-y-3">
               {inCategory.map((question) => (
-                <li key={question.id}>
+                <li
+                  key={question.id}
+                  data-question-id={question.id}
+                  className={
+                    question.id === focusQuestionId
+                      ? "rounded-xl ring-2 ring-brand-300 ring-offset-2"
+                      : undefined
+                  }
+                >
                   <QuestionCard
                     question={question}
                     state={itemState[question.id]}

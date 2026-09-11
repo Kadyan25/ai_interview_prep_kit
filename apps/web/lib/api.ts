@@ -1,4 +1,13 @@
-import type { JobDocument, KitDocument, KitInput, KitSummary, Op } from "@prep/shared";
+import type {
+  Confidence,
+  JobDocument,
+  KitDocument,
+  KitInput,
+  KitSummary,
+  Op,
+  PracticeCard,
+  PracticeStats,
+} from "@prep/shared";
 
 export class ApiError extends Error {
   readonly code: string;
@@ -98,6 +107,16 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ section, ...(category ? { category } : {}) }),
     }),
+
+  practiceSession: (id: string) =>
+    apiFetch<{ cards: PracticeCard[] }>(`/kits/${id}/practice/session`),
+  practiceAnswer: (id: string, cardId: string, confidence: Confidence) =>
+    apiFetch<{ ok: true }>(`/kits/${id}/practice/answers`, {
+      method: "POST",
+      body: JSON.stringify({ cardId, confidence }),
+    }),
+  practiceStats: (id: string) =>
+    apiFetch<{ stats: PracticeStats }>(`/kits/${id}/practice/stats`),
 };
 
 export type CreateKitResponse = {

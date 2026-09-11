@@ -7,6 +7,7 @@ import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import { authRouter } from "./routes/auth.js";
 import { healthRouter } from "./routes/health.js";
 import { kitsRouter } from "./routes/kits.js";
+import { practiceRouter } from "./routes/practice.js";
 
 export function createApp(): Express {
   const env = serverEnv();
@@ -26,6 +27,8 @@ export function createApp(): Express {
 
   app.use("/health", healthRouter);
   app.use("/api/auth", authRouter);
+  // Mounted ahead of the kits router so the nested paths are matched first.
+  app.use("/api/kits/:id/practice", practiceRouter);
   app.use("/api/kits", kitsRouter);
 
   app.use(notFound);

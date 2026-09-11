@@ -19,12 +19,17 @@ export function EditableSchedule({
   onApply,
   locked,
   action,
+  todayDay,
+  onOpenQuestion,
 }: {
   body: KitBody;
   itemState: ItemStateMap;
   onApply: (ops: Op[]) => void;
   locked: boolean;
   action?: React.ReactNode;
+  /** Which day the user is on, counted from when the kit was created. */
+  todayDay?: number;
+  onOpenQuestion?: (questionId: string) => void;
 }) {
   const questionById = new Map(body.questions.map((q) => [q.id, q]));
   const total = body.schedule.days.reduce((sum, day) => sum + day.minutes, 0);
@@ -54,11 +59,12 @@ export function EditableSchedule({
       <ol className="space-y-3">
         {body.schedule.days.map((day) => (
           <li key={day.day}>
-            <Card>
+            <Card className={day.day === todayDay ? "border-brand-300 ring-1 ring-brand-200" : undefined}>
               <CardBody className="space-y-3">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h3 className="flex min-w-0 flex-1 items-baseline gap-2 text-sm font-semibold text-zinc-900">
                     <span className="shrink-0">Day {day.day}</span>
+                    {day.day === todayDay ? <Badge tone="brand">Today</Badge> : null}
                     <span className="min-w-0 flex-1 font-normal text-muted">
                       <InlineEdit
                         label={`focus for day ${day.day}`}
@@ -104,9 +110,19 @@ export function EditableSchedule({
                         <span aria-hidden className="text-zinc-300">
                           —
                         </span>
-                        <span className="min-w-0 flex-1 line-clamp-2">
-                          {questionById.get(id)?.prompt ?? id}
-                        </span>
+                        {onOpenQuestion ? (
+                          <button
+                            type="button"
+                            onClick={() => onOpenQuestion(id)}
+                            className="min-w-0 flex-1 text-left line-clamp-2 hover:text-brand-700 hover:underline"
+                          >
+                            {questionById.get(id)?.prompt ?? id}
+                          </button>
+                        ) : (
+                          <span className="min-w-0 flex-1 line-clamp-2">
+                            {questionById.get(id)?.prompt ?? id}
+                          </span>
+                        )}
                         <button
                           type="button"
                           disabled={locked}

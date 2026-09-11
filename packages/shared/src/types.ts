@@ -91,6 +91,37 @@ export type KitSummary = {
 };
 
 /* ---------------------------------------------------------------------------
+ * Practice mode
+ * ------------------------------------------------------------------------- */
+
+export type Confidence = 1 | 2 | 3;
+
+export type PracticeCard = {
+  id: string;
+  front: string;
+  back: string;
+  requirement_ids: string[];
+  seenCount: number;
+  confidence: Confidence | null;
+  lastSeenAt: string | null;
+  requirements: { id: string; text: string; priority: "must" | "nice" }[];
+};
+
+export type PracticeStats = {
+  total: number;
+  seen: number;
+  byConfidence: Record<"1" | "2" | "3", number>;
+  byRequirement: {
+    id: string;
+    text: string;
+    priority: "must" | "nice";
+    cards: number;
+    seen: number;
+    shaky: number;
+  }[];
+};
+
+/* ---------------------------------------------------------------------------
  * Batch runner contract (assessment Appendix B)
  * ------------------------------------------------------------------------- */
 

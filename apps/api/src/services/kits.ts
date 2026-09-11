@@ -9,11 +9,13 @@ import type {
 } from "@prep/shared";
 import { OpsError, applyOps, sectionForOp } from "@prep/shared";
 import { Kit, type KitDoc } from "../models/Kit.js";
+import { GenerationJob } from "../models/GenerationJob.js";
 import { AppError } from "../lib/errors.js";
 import { kitContentHash } from "../lib/hash.js";
 import { assertGeneratorReady, enqueueJob } from "../jobs/runner.js";
 import { createJob } from "./jobs.js";
 import { activeLockedSections, type RegenSection } from "./regenerate.js";
+import { deletePracticeForKit } from "./practice.js";
 
 function objectId(id: string, what = "kit"): mongoose.Types.ObjectId {
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -280,9 +282,10 @@ export async function requestRegeneration(
 }
 
 export async function deleteKit(userId: string, kitId: string): Promise<void> {
-  const result = await Kit.deleteOne({
-    _id: objectId(kitId),
-    userId: objectId(userId, "user"),
-  });
+  const id = objectId(kitId);
+  const result = await Kit.deleteOne({ _id: id, userId: objectId(userId, "user") });
   if (result.deletedCount === 0) throw new AppError("NOT_FOUND", "That kit does not exist.");
+
+  // Practice history and jobs belong to the kit; nothing should outlive it.
+  await Promise.all([deletePracticeForKit(id), GenerationJob.deleteMany({ kitId: id })]);
 }

@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Dumbbell } from "lucide-react";
 import type { QuestionCategory } from "@prep/shared";
 import { EditableBrief } from "@/components/builder/EditableBrief";
 import { EditableRole } from "@/components/builder/EditableRole";
@@ -34,6 +34,7 @@ export default function KitPage() {
   const params = useParams<{ id: string }>();
   const kitId = params.id;
   const [tab, setTab] = useState("brief");
+  const [focusQuestionId, setFocusQuestionId] = useState<string | null>(null);
 
   const draft = useKitDraft(kitId);
 
@@ -94,6 +95,12 @@ export default function KitPage() {
         <div className="flex items-center gap-3">
           <SaveIndicator state={draft.saveState} error={draft.saveError} />
           <KitStatusBadge status={kit.status} />
+          {body && body.flashcards.length > 0 ? (
+            <LinkButton href={`/kits/${kitId}/practice`}>
+              <Dumbbell className="size-4" aria-hidden />
+              Practice
+            </LinkButton>
+          ) : null}
         </div>
       </div>
 
@@ -149,6 +156,7 @@ export default function KitPage() {
                     itemState={state.itemState}
                     onApply={draft.apply}
                     locked={isLocked("questions")}
+                    focusQuestionId={focusQuestionId}
                     regenerateAction={(category: QuestionCategory) => (
                       <RegenerateButton
                         kitId={kitId}
@@ -182,6 +190,11 @@ export default function KitPage() {
                     itemState={state.itemState}
                     onApply={draft.apply}
                     locked={isLocked("schedule")}
+                    todayDay={dayOfPlan(kit.createdAt, body.schedule.days_available)}
+                    onOpenQuestion={(questionId) => {
+                      setFocusQuestionId(questionId);
+                      setTab("questions");
+                    }}
                     action={
                       <RegenerateButton
                         kitId={kitId}
@@ -199,6 +212,22 @@ export default function KitPage() {
       ) : null}
     </div>
   );
+}
+
+/**
+ * Which day of the plan the user is on, counted from when the kit was made.
+ * Returns undefined once the plan has run out, rather than pointing at a day
+ * that has already passed.
+ */
+function dayOfPlan(createdAt: string, daysAvailable: number): number | undefined {
+  const start = new Date(createdAt);
+  start.setHours(0, 0, 0, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const elapsed = Math.round((today.getTime() - start.getTime()) / 86_400_000);
+  const day = elapsed + 1;
+  return day >= 1 && day <= daysAvailable ? day : undefined;
 }
 
 function WarningsBanner({ warnings }: { warnings: string[] }) {
