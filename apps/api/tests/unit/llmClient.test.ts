@@ -210,6 +210,25 @@ describe("llm client", () => {
     expect(waits[0]).toBe(7000);
   });
 
+  it("ignores a Retry-After of zero and backs off properly", async () => {
+    // A daily-quota 429 can say "retry in 0s", which would otherwise hammer the
+    // provider in a tight loop.
+    const waits: number[] = [];
+    const { provider } = scriptedProvider("groq", [
+      new LlmHttpError("groq", "daily quota exceeded", 429, 0),
+      '{"answer":"ok"}',
+    ]);
+    const client = createLlmClient([provider], {
+      minGapMs: 0,
+      sleep: async (ms) => {
+        waits.push(ms);
+      },
+    });
+
+    await client.generateJson({ task: "t", system: "s", user: "u", schema });
+    expect(waits[0]).toBeGreaterThanOrEqual(2000);
+  });
+
   it("reports its configured providers in order", () => {
     const a = scriptedProvider("gemini", []);
     const b = scriptedProvider("groq", []);

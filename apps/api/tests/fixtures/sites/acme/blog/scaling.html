@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Scaling the ledger to a billion entries — Acme Payments</title>
+  </head>
+  <body>
+    <main>
+      <h1>Scaling the ledger to a billion entries</h1>
+      <p>
+        Our ledger crossed a billion entries last spring. The write path was never
+        the problem: appending double-entry rows is cheap. The problem was the
+        daily reconciliation job, which read every entry written that day and
+        compared it against the settlement file from our bank.
+      </p>
+      <p>
+        We moved reconciliation from a nightly batch to a streaming job keyed by
+        settlement date, partitioned the ledger by seller, and kept both entries
+        of a transfer inside the same partition so a transfer is always balanced
+        within one shard. Reconciliation went from four hours to eleven minutes.
+      </p>
+      <p>
+        The lesson we keep relearning: in a ledger, the interesting scaling limit
+        is almost never the write throughput. It is whatever has to read
+        everything back and prove the numbers agree.
+      </p>
+    </main>
+  </body>
+</html>

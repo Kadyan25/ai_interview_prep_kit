@@ -6,20 +6,28 @@ import { createGroqProvider } from "./providers/groq.js";
 import type { LlmClient, LlmProvider } from "./types.js";
 
 /**
- * Gemini first, Groq as the fallback. If only one key is present that provider
- * is used alone and the failover path simply never triggers.
+ * Two providers, tried in order, with the first one set by LLM_PRIMARY.
+ *
+ * Groq leads by default for a practical reason: a five-case batch costs roughly
+ * fifty model calls, and Google's free tier allows twenty generate-content
+ * requests per day on a flash model. Groq's free tier carries the batch and
+ * answers in about a third of the time. Gemini stays as the fallback, so the run
+ * survives either provider being unavailable. If only one key is configured that
+ * provider is used alone and the failover path never triggers.
  */
 export function createLlmFromEnv(): LlmClient {
   requireLlmKey();
   const env = coreEnv();
-  const providers: LlmProvider[] = [];
 
-  if (env.GEMINI_API_KEY) {
-    providers.push(createGeminiProvider(env.GEMINI_API_KEY, env.GEMINI_MODEL));
-  }
-  if (env.GROQ_API_KEY) {
-    providers.push(createGroqProvider(env.GROQ_API_KEY, env.GROQ_MODEL));
-  }
+  const gemini = env.GEMINI_API_KEY
+    ? createGeminiProvider(env.GEMINI_API_KEY, env.GEMINI_MODEL)
+    : null;
+  const groq = env.GROQ_API_KEY ? createGroqProvider(env.GROQ_API_KEY, env.GROQ_MODEL) : null;
+
+  const ordered = env.LLM_PRIMARY === "gemini" ? [gemini, groq] : [groq, gemini];
+  const providers = ordered.filter((p): p is LlmProvider => p !== null);
+
+  logger.debug({ providers: providers.map((p) => p.name) }, "llm providers");
 
   return createLlmClient(providers, {
     concurrency: env.LLM_CONCURRENCY,

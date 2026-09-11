@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /acme/internal/
+
+# Everything else on this fixture host is fair game.

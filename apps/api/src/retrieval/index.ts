@@ -1,13 +1,56 @@
+import { coreEnv, isProduction } from "../config/env.js";
 import type { ResearchDeps } from "../pipeline/types.js";
+import { crawl } from "./crawl.js";
+import { searchDiscussion } from "./discussion.js";
+import type { FetchOptions } from "./fetchPage.js";
+import { RobotsCache } from "./robots.js";
+
+export { crawl, isSameSite, registrableDomain } from "./crawl.js";
+export { extractContent } from "./cleanHtml.js";
+export { fetchPage } from "./fetchPage.js";
+export { rankLinks, scoreLink } from "./rankLinks.js";
+export { RobotsCache } from "./robots.js";
+export { searchDiscussion } from "./discussion.js";
+export { guardUrl, isPrivateAddress } from "./urlGuard.js";
+
+const MAX_DEPTH = 2;
+
+export function fetchOptionsFromEnv(): FetchOptions {
+  const env = coreEnv();
+  return {
+    timeoutMs: env.FETCH_TIMEOUT_MS,
+    guard: {
+      // Off in production. Local runs need it so the batch CLI can crawl the
+      // fixture site on localhost.
+      allowPrivate: !isProduction() || env.ALLOW_PRIVATE_URLS,
+    },
+  };
+}
 
 /**
  * The seam between the pipeline and the outside world. Both the API job runner
  * and the batch CLI build their research dependencies here, so there is exactly
  * one place that decides what the pipeline is allowed to fetch.
- *
- * Returns undefined while retrieval is unavailable; the pipeline then runs from
- * the job description alone and says so in the kit's warnings.
  */
-export function createResearchDeps(): ResearchDeps | undefined {
-  return undefined;
+export function createResearchDeps(): ResearchDeps {
+  const env = coreEnv();
+  const fetchOptions = fetchOptionsFromEnv();
+  // One robots cache per process: a crawl of twelve pages should read robots.txt
+  // once, not twelve times.
+  const robots = new RobotsCache(fetchOptions);
+
+  return {
+    crawl: (startUrl) =>
+      crawl(startUrl, {
+        maxPages: env.CRAWL_MAX_PAGES,
+        maxDepth: MAX_DEPTH,
+        fetch: fetchOptions,
+        robots,
+      }),
+    searchDiscussion: (companyName) =>
+      searchDiscussion(companyName, {
+        timeoutMs: env.FETCH_TIMEOUT_MS,
+        tavilyApiKey: env.TAVILY_API_KEY,
+      }),
+  };
 }

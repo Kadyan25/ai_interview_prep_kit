@@ -1,0 +1,14 @@
+[
+  {
+    "id": "acme-buried-hiring-page",
+    "jd": "Senior Backend Engineer — Ledger\nAcme Payments · Remote (EU)\n\nAbout the role\nYou will own the payout ledger that moves money for thousands of online marketplaces. The ledger is the system of record for every transfer we make, so correctness matters more here than anywhere else in the company.\n\nWhat you will do\n- Own the payout service end to end, including its on-call rotation\n- Design the next version of our double-entry ledger\n- Reduce reconciliation time from hours to minutes\n\nRequirements:\n- 5+ years building production services in Node.js and TypeScript is required\n- Strong experience designing and scaling distributed systems\n- You must be comfortable owning a service end to end, including on-call\n- Experience with the payments domain is nice to have\n- Mentoring junior engineers is part of the job",
+    "company_url": "http://localhost:8099/acme/",
+    "days": 5
+  },
+  {
+    "id": "nohire-publishes-nothing",
+    "jd": "Product Engineer, Analytics\nBramble Analytics\n\nWe are looking for a product engineer to work across our funnels and cohorts features.\n\nRequirements:\n- 3+ years of TypeScript and React is required\n- Experience with event pipelines or analytics data is required\n- Comfortable talking directly to customers about what they need\n- Familiarity with ClickHouse is nice to have",
+    "company_url": "http://localhost:8099/nohire/",
+    "days": 4
+  }
+]

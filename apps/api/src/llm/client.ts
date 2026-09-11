@@ -106,7 +106,11 @@ export function createLlmClient(
   }
 
   function backoffMs(attempt: number, error: LlmHttpError): number {
-    if (error.retryAfterMs !== undefined) return Math.min(error.retryAfterMs, 30_000);
+    // A daily-quota 429 can carry "retry in 0s", which is not a real hint.
+    // Anything non-positive falls through to the exponential backoff.
+    if (error.retryAfterMs !== undefined && error.retryAfterMs > 0) {
+      return Math.min(error.retryAfterMs, 30_000);
+    }
     const jitter = Math.floor(Math.random() * 500);
     return Math.min(2000 * 2 ** attempt + jitter, 30_000);
   }
