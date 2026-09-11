@@ -1,16 +1,19 @@
 import { Router } from "express";
 import { z } from "zod";
+import { parseOps, questionCategorySchema } from "@prep/shared";
 import { AppError } from "../lib/errors.js";
 import { currentUserId, pathParam, requireAuth } from "../middleware/auth.js";
 import { createKitLimiter } from "../middleware/rateLimit.js";
 import { latestJob, toJobResponse } from "../services/jobs.js";
 import {
   MAX_BATCH,
+  applyKitOps,
   createKit,
   createKitBatch,
   deleteKit,
   getKit,
   listKits,
+  requestRegeneration,
   retryKit,
 } from "../services/kits.js";
 import { MAX_JD_CHARS } from "../pipeline/steps/parseInput.js";
@@ -33,6 +36,17 @@ const createSchema = kitInputSchema.extend({ force: z.boolean().optional() });
 
 const batchSchema = z.object({
   kits: z.array(kitInputSchema).min(1).max(MAX_BATCH),
+});
+
+const patchSchema = z.object({
+  // The version the client was looking at when the user made these edits.
+  version: z.number().int().min(1),
+  ops: z.unknown(),
+});
+
+const regenerateSchema = z.object({
+  section: z.enum(["brief", "category", "schedule"]),
+  category: questionCategorySchema.optional(),
 });
 
 export const kitsRouter: Router = Router();
@@ -75,6 +89,23 @@ kitsRouter.get("/:id/job", async (req, res) => {
 
 kitsRouter.post("/:id/retry", createKitLimiter, async (req, res) => {
   const { jobId } = await retryKit(currentUserId(req), pathParam(req, "id"));
+  res.status(202).json({ jobId });
+});
+
+kitsRouter.patch("/:id", async (req, res) => {
+  const { version, ops } = patchSchema.parse(req.body);
+  const result = await applyKitOps(currentUserId(req), pathParam(req, "id"), version, parseOps(ops));
+  res.json(result);
+});
+
+kitsRouter.post("/:id/regenerate", createKitLimiter, async (req, res) => {
+  const { section, category } = regenerateSchema.parse(req.body);
+  const { jobId } = await requestRegeneration(
+    currentUserId(req),
+    pathParam(req, "id"),
+    section,
+    category,
+  );
   res.status(202).json({ jobId });
 });
 

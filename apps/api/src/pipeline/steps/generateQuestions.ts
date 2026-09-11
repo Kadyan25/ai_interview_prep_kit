@@ -70,7 +70,7 @@ export function questionCount(requirementCount: number): number {
   return Math.min(12, Math.max(3, requirementCount * 2));
 }
 
-async function callForCategory(
+export async function generateForCategory(
   category: QuestionCategory,
   requirements: Requirement[],
   context: QuestionContext,
@@ -145,7 +145,7 @@ export async function generateQuestions(
     }
 
     try {
-      const generated = await callForCategory(category, requirements, context, deps);
+      const generated = await generateForCategory(category, requirements, context, deps);
       questions.push(...generated);
       outcomes.push({ category, status: "done", count: generated.length });
     } catch (error) {

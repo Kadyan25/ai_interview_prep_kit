@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
-import type { ItemStateMap, KitBody } from "@prep/shared";
-import { Kit } from "../models/Kit.js";
+import type { ItemStateMap, JobType, KitBody, QuestionCategory, StepStatus } from "@prep/shared";
+import { Kit, type KitDoc } from "../models/Kit.js";
+import { GenerationJob } from "../models/GenerationJob.js";
 import { AppError, toAppError } from "../lib/errors.js";
 import { logger } from "../lib/logger.js";
 import { createLlmFromEnv } from "../llm/factory.js";
@@ -10,6 +11,12 @@ import { runPipeline } from "../pipeline/runPipeline.js";
 import type { LlmClient } from "../llm/types.js";
 import type { ResearchDeps } from "../pipeline/types.js";
 import { finishJob, markRunning, recordStep, sweepInterruptedJobs } from "../services/jobs.js";
+import {
+  regenerateBrief,
+  regenerateCategory,
+  regenerateSchedule,
+  type RegenResult,
+} from "../services/regenerate.js";
 
 export type QueuedJob = {
   jobId: mongoose.Types.ObjectId;
@@ -84,12 +91,20 @@ async function drain(): Promise<void> {
 }
 
 async function runJob(job: QueuedJob): Promise<void> {
+  const record = await GenerationJob.findById(job.jobId);
   const kit = await Kit.findOne({ _id: job.kitId, userId: job.userId });
+
+  if (!record) return;
   if (!kit) {
     await finishJob(job.jobId, "failed", {
       code: "NOT_FOUND",
       message: "The kit was deleted before generation started.",
     });
+    return;
+  }
+
+  if (record.type !== "full") {
+    await runRegeneration(job, kit, record.type, record.category);
     return;
   }
 
@@ -132,6 +147,58 @@ async function runJob(job: QueuedJob): Promise<void> {
       { kitId: kit._id.toString(), code: appError.code, message: appError.message },
       "generation failed",
     );
+  }
+}
+
+/**
+ * Regeneration writes with a targeted `$set` on just the paths it owns, so an
+ * edit the user makes elsewhere while this runs is preserved rather than
+ * clobbered by a whole-document write.
+ */
+async function runRegeneration(
+  job: QueuedJob,
+  kit: KitDoc,
+  type: JobType,
+  category: string | null,
+): Promise<void> {
+  await markRunning(job.jobId);
+  const started = Date.now();
+  const onProgress = (step: string, status: StepStatus, note?: string) =>
+    recordStep(job.jobId, step, status, note);
+
+  try {
+    const deps = {
+      llm: llm(),
+      research: research(),
+      logger: logger.child({ kitId: kit._id.toString(), regen: type }),
+    };
+
+    let result: RegenResult;
+    if (type === "regen_brief") {
+      result = await regenerateBrief(kit, deps, onProgress);
+    } else if (type === "regen_category") {
+      result = await regenerateCategory(
+        kit,
+        (category ?? "technical") as QuestionCategory,
+        deps,
+        onProgress,
+      );
+    } else {
+      await onProgress("schedule", "running");
+      result = regenerateSchedule(kit);
+      await onProgress("schedule", "done", result.note);
+    }
+
+    await Kit.updateOne({ _id: kit._id }, { $set: result.set, $inc: { version: 1 } });
+    await finishJob(job.jobId, "done");
+    logger.info(
+      { kitId: kit._id.toString(), type, ms: Date.now() - started, note: result.note },
+      "regeneration finished",
+    );
+  } catch (error) {
+    const appError = toAppError(error);
+    await finishJob(job.jobId, "failed", { code: appError.code, message: appError.message });
+    logger.warn({ kitId: kit._id.toString(), type, code: appError.code }, "regeneration failed");
   }
 }
 

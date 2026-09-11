@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
+import { OpsError } from "@prep/shared";
 import { AppError, isAppError } from "../lib/errors.js";
 import { logger } from "../lib/logger.js";
 
@@ -23,6 +24,9 @@ export function errorHandler(
       "Some fields need fixing.",
       err.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
     );
+  } else if (err instanceof OpsError) {
+    // A rejected edit batch is the user's input being wrong, not a server fault.
+    appError = new AppError("INVALID_INPUT", err.message, err.details);
   } else if (err instanceof SyntaxError && "body" in err) {
     appError = new AppError("INVALID_INPUT", "Request body is not valid JSON.");
   } else {

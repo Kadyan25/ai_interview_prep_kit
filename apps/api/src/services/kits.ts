@@ -1,10 +1,19 @@
 import mongoose from "mongoose";
-import type { KitDocument, KitInput, KitSummary } from "@prep/shared";
+import type {
+  KitDocument,
+  KitInput,
+  KitState,
+  KitSummary,
+  Op,
+  QuestionCategory,
+} from "@prep/shared";
+import { OpsError, applyOps, sectionForOp } from "@prep/shared";
 import { Kit, type KitDoc } from "../models/Kit.js";
 import { AppError } from "../lib/errors.js";
 import { kitContentHash } from "../lib/hash.js";
 import { assertGeneratorReady, enqueueJob } from "../jobs/runner.js";
 import { createJob } from "./jobs.js";
+import { activeLockedSections, type RegenSection } from "./regenerate.js";
 
 function objectId(id: string, what = "kit"): mongoose.Types.ObjectId {
   if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -158,6 +167,114 @@ export async function retryKit(userId: string, kitId: string): Promise<{ jobId: 
   await Kit.updateOne({ _id: kit._id }, { $set: { status: "generating" } });
   const job = await createJob({ kitId: kit._id, userId: owner, type: "full" });
   enqueueJob({ jobId: job._id, kitId: kit._id, userId: owner });
+
+  return { jobId: job._id.toString() };
+}
+
+export type ApplyOpsResult = { kit: KitDocument };
+
+/**
+ * Edits are applied with the version the client was looking at. If anything else
+ * wrote to the kit in between, the update matches nothing and the client is told
+ * to reload rather than silently overwriting someone else's change.
+ */
+export async function applyKitOps(
+  userId: string,
+  kitId: string,
+  version: number,
+  ops: Op[],
+): Promise<ApplyOpsResult> {
+  const owner = objectId(userId, "user");
+  const id = objectId(kitId);
+
+  const kit = await Kit.findOne({ _id: id, userId: owner });
+  if (!kit) throw new AppError("NOT_FOUND", "That kit does not exist.");
+  if (!kit.body) {
+    throw new AppError("INVALID_INPUT", "This kit has no content to edit yet.");
+  }
+
+  // A section being regenerated is off limits; everything else stays editable.
+  const locked = await activeLockedSections(id);
+  if (locked.length > 0) {
+    const blocked = ops.map(sectionForOp).find((section) => locked.includes(section));
+    if (blocked) {
+      throw new AppError(
+        "SECTION_LOCKED",
+        `The ${blocked} section is being regenerated. Your other edits still save.`,
+      );
+    }
+  }
+
+  let next: KitState;
+  try {
+    next = applyOps(
+      { body: kit.body, itemState: kit.itemState ?? {}, counters: kit.counters },
+      ops,
+    );
+  } catch (error) {
+    if (error instanceof OpsError) {
+      throw new AppError("INVALID_INPUT", error.message, error.details);
+    }
+    throw error;
+  }
+
+  const updated = await Kit.findOneAndUpdate(
+    { _id: id, userId: owner, version },
+    {
+      $set: { body: next.body, itemState: next.itemState, counters: next.counters },
+      $inc: { version: 1 },
+    },
+    { new: true },
+  );
+
+  if (!updated) {
+    const current = await Kit.findOne({ _id: id, userId: owner });
+    throw new AppError(
+      "VERSION_CONFLICT",
+      "This kit changed in another tab. Your edits were not saved — reload to get the latest version.",
+      current ? { kit: toKitDocument(current) } : undefined,
+    );
+  }
+
+  return { kit: toKitDocument(updated) };
+}
+
+/** Queues a regeneration of one section and returns the job doing it. */
+export async function requestRegeneration(
+  userId: string,
+  kitId: string,
+  section: RegenSection,
+  category?: QuestionCategory,
+): Promise<{ jobId: string }> {
+  assertGeneratorReady();
+
+  const owner = objectId(userId, "user");
+  const id = objectId(kitId);
+
+  const kit = await Kit.findOne({ _id: id, userId: owner });
+  if (!kit) throw new AppError("NOT_FOUND", "That kit does not exist.");
+  if (!kit.body) {
+    throw new AppError("INVALID_INPUT", "This kit has nothing to regenerate yet.");
+  }
+  if (section === "category" && !category) {
+    throw new AppError("INVALID_INPUT", "Say which category of questions to regenerate.");
+  }
+
+  const locked = await activeLockedSections(id);
+  const wanted = section === "category" ? "questions" : section;
+  if (locked.includes(wanted)) {
+    throw new AppError("SECTION_LOCKED", "That section is already being regenerated.");
+  }
+
+  const type =
+    section === "brief"
+      ? "regen_brief"
+      : section === "category"
+        ? "regen_category"
+        : "regen_schedule";
+
+  const job = await createJob({ kitId: id, userId: owner, type, category: category ?? null });
+  enqueueJob({ jobId: job._id, kitId: id, userId: owner });
 
   return { jobId: job._id.toString() };
 }
