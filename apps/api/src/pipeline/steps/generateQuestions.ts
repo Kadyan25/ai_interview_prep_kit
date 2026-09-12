@@ -93,7 +93,9 @@ export async function generateForCategory(
       companySummary: context.companySummary,
     }),
     schema: questionsSchema,
-    maxOutputTokens: 4096,
+    // Up to 12 questions with outlines, and some models emit reasoning
+    // tokens too. A truncated reply is a wasted call plus a wasted fallback.
+    maxOutputTokens: 8192,
   });
 
   return result.questions.map((q) => ({
@@ -188,7 +190,7 @@ export async function generateForGaps(
           requirements,
         }),
         schema: questionsSchema,
-        maxOutputTokens: 3072,
+        maxOutputTokens: 4096,
       });
       produced.push(
         ...result.questions.map((q) => ({

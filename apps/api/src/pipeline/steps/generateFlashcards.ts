@@ -34,7 +34,7 @@ export async function generateFlashcards(
       count,
     }),
     schema,
-    maxOutputTokens: 4096,
+    maxOutputTokens: 8192,
   });
 
   const drafts: DraftFlashcard[] = result.flashcards.map((card) => ({

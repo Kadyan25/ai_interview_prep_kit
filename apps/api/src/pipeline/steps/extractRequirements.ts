@@ -47,7 +47,7 @@ export async function extractRequirements(
     system: extractRequirementsSystem,
     user: extractRequirementsUser(parsed.jd),
     schema: responseSchema,
-    maxOutputTokens: 4096,
+    maxOutputTokens: 6144,
   });
 
   const drafts: DraftRequirement[] = raw.requirements.map((r) => ({

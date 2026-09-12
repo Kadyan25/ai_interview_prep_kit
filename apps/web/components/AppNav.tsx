@@ -55,7 +55,9 @@ export function AppNav() {
           <div className="ml-auto">
             <Button variant="ghost" size="sm" onClick={signOut}>
               <LogOut className="size-4" aria-hidden />
-              <span className="hidden sm:inline">Sign out</span>
+              {/* sr-only rather than hidden: on a phone the label is still the
+                  button's accessible name, it is just not painted. */}
+              <span className="sr-only sm:not-sr-only">Sign out</span>
             </Button>
           </div>
         </div>

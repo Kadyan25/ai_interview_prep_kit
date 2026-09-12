@@ -1,0 +1,32 @@
+[
+  {
+    "id": "acme-senior-backend",
+    "jd": "Senior Backend Engineer — Ledger\nAcme Payments · Remote (EU)\n\nAbout the role\nYou will own the payout ledger that moves money for thousands of online marketplaces. The ledger is the system of record for every transfer we make, so correctness matters more here than anywhere else in the company.\n\nWhat you will do\n- Own the payout service end to end, including its on-call rotation\n- Design the next version of our double-entry ledger\n- Reduce reconciliation time from hours to minutes\n\nRequirements:\n- 5+ years building production services in Node.js and TypeScript is required\n- Strong experience designing and scaling distributed systems\n- You must be comfortable owning a service end to end, including on-call\n- Experience with the payments domain is nice to have\n- Mentoring junior engineers is part of the job",
+    "company_url": "http://localhost:8099/acme/",
+    "days": 5
+  },
+  {
+    "id": "acme-junior-support-engineer",
+    "jd": "Support Engineer\nAcme Payments · Remote\n\nYou are the first person a marketplace talks to when a payout does not arrive. You will reproduce the problem, read the ledger, and either fix it or hand engineering a case they can act on immediately.\n\nRequirements:\n- 1+ years in a technical support or engineering role is required\n- You must be able to read SQL and write basic queries\n- Clear written English is essential; most support happens over email\n- Familiarity with payments or fintech is nice to have\n- Experience with Zendesk is a bonus",
+    "company_url": "http://localhost:8099/acme/",
+    "days": 2
+  },
+  {
+    "id": "bramble-product-engineer",
+    "jd": "Product Engineer, Analytics\nBramble Analytics\n\nWe are looking for a product engineer to work across our funnels and cohorts features. You will own features end to end, from the event schema through to the chart the customer reads.\n\nRequirements:\n- 3+ years of TypeScript and React is required\n- Experience with event pipelines or analytics data is required\n- Comfortable talking directly to customers about what they need\n- Familiarity with ClickHouse is nice to have",
+    "company_url": "http://localhost:8099/nohire/",
+    "days": 7
+  },
+  {
+    "id": "thin-posting-no-url",
+    "jd": "Backend engineer needed. Node.js. Remote. Apply now.",
+    "company_url": "",
+    "days": 3
+  },
+  {
+    "id": "unreachable-company-site",
+    "jd": "Frontend Engineer, Design Systems\n\nWe are looking for someone to own our component library and the design tokens behind it.\n\nRequirements:\n- 3+ years of React and TypeScript is required\n- Experience with accessibility standards such as WCAG 2.1 is required\n- Familiarity with Figma is nice to have\n- You will work closely with designers and must communicate clearly in writing",
+    "company_url": "https://this-domain-does-not-resolve-12345.invalid",
+    "days": 14
+  }
+]

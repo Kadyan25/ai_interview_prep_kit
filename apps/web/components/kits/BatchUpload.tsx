@@ -95,11 +95,15 @@ export function BatchUpload() {
         description="A JSON file of roles, the same shape the batch runner takes."
       />
       <CardBody className="space-y-4">
+        {/* The visible button is the control; this input is only its mechanism,
+            so it is kept out of the tab order and still carries a name. */}
         <input
           ref={inputRef}
           type="file"
           accept="application/json,.json"
           className="sr-only"
+          tabIndex={-1}
+          aria-label="Choose a JSON file of roles"
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) void readFile(file);
