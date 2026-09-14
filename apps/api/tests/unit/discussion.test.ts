@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { isAboutInterviewing, searchDiscussion } from "../../src/retrieval/discussion.js";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import {
+  isAboutInterviewing,
+  searchDiscussion,
+  type DiscussionOptions,
+} from "../../src/retrieval/discussion.js";
+import {
+  SEARCH_CACHE_TTL_MS,
+  SearchBudget,
+  createSearchCache,
+} from "../../src/retrieval/searchCache.js";
 import { howTheyHire } from "../../src/pipeline/steps/writeBrief.js";
 
 /**
@@ -77,6 +89,91 @@ describe("searchDiscussion", () => {
   it("returns nothing rather than throwing when the search is down", async () => {
     const down = (async () => new Response("", { status: 503 })) as typeof fetch;
     await expect(searchDiscussion("Coinbase", { timeoutMs: 1000, fetchImpl: down })).resolves.toEqual([]);
+  });
+});
+
+describe("Tavily credit protection", () => {
+  const tavilyResults = [
+    {
+      title: "Stripe Interview Process",
+      url: "https://example.com/stripe-interviews",
+      content: "Candidates describe the Stripe interview process as a phone screen, then a bug squash.",
+    },
+  ];
+
+  /** Counts paid calls; Hacker News answers with nothing. */
+  function countingFetch(tavilyStatus = 200) {
+    const calls = { tavily: 0 };
+    const impl = (async (input: string | URL | Request) => {
+      if (String(input).includes("tavily")) {
+        calls.tavily += 1;
+        return new Response(JSON.stringify({ results: tavilyResults }), { status: tavilyStatus });
+      }
+      return new Response(JSON.stringify({ hits: [] }), { status: 200 });
+    }) as typeof fetch;
+    return { calls, impl };
+  }
+
+  const options = (impl: typeof fetch, extra: Partial<DiscussionOptions> = {}): DiscussionOptions => ({
+    timeoutMs: 1000,
+    tavilyApiKey: "test-key",
+    companyUrl: "https://stripe.com",
+    fetchImpl: impl,
+    ...extra,
+  });
+
+  it("searches a company once and answers repeats from the cache", async () => {
+    const { calls, impl } = countingFetch();
+    const cache = createSearchCache({});
+    const first = await searchDiscussion("Stripe", options(impl, { cache }));
+    const second = await searchDiscussion("stripe", options(impl, { cache }));
+
+    expect(calls.tavily).toBe(1);
+    expect(first).toHaveLength(1);
+    expect(second).toEqual(first);
+  });
+
+  it("keeps the cache across processes through its file", async () => {
+    const file = path.join(mkdtempSync(path.join(tmpdir(), "tavily-")), "cache.json");
+    const { calls, impl } = countingFetch();
+    await searchDiscussion("Stripe", options(impl, { cache: createSearchCache({ file }) }));
+    await searchDiscussion("Stripe", options(impl, { cache: createSearchCache({ file }) }));
+    expect(calls.tavily).toBe(1);
+  });
+
+  it("searches again once a cached result is a week old", async () => {
+    let now = 0;
+    const cache = createSearchCache({ now: () => now });
+    const { calls, impl } = countingFetch();
+    await searchDiscussion("Stripe", options(impl, { cache }));
+    now = SEARCH_CACHE_TTL_MS + 1;
+    await searchDiscussion("Stripe", options(impl, { cache }));
+    expect(calls.tavily).toBe(2);
+  });
+
+  it("stops calling once the budget is spent", async () => {
+    const { calls, impl } = countingFetch();
+    const budget = new SearchBudget(1);
+    await searchDiscussion("Stripe", options(impl, { budget }));
+    const overBudget = await searchDiscussion("Stripe", options(impl, { budget }));
+    expect(calls.tavily).toBe(1);
+    expect(overBudget).toEqual([]);
+  });
+
+  it("does not cache a failed search", async () => {
+    const cache = createSearchCache({});
+    const failing = countingFetch(500);
+    await searchDiscussion("Stripe", options(failing.impl, { cache }));
+    const working = countingFetch();
+    const hits = await searchDiscussion("Stripe", options(working.impl, { cache }));
+    expect(working.calls.tavily).toBe(1);
+    expect(hits).toHaveLength(1);
+  });
+
+  it("makes no paid call without a key", async () => {
+    const { calls, impl } = countingFetch();
+    await searchDiscussion("Stripe", options(impl, { tavilyApiKey: undefined }));
+    expect(calls.tavily).toBe(0);
   });
 });
 

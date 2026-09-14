@@ -1,4 +1,6 @@
-import { coreEnv, isProduction } from "../config/env.js";
+import path from "node:path";
+import { coreEnv, isProduction, repoRoot } from "../config/env.js";
+import { SearchBudget, createSearchCache } from "./searchCache.js";
 import type { ResearchDeps } from "../pipeline/types.js";
 import { crawl } from "./crawl.js";
 import { searchDiscussion } from "./discussion.js";
@@ -38,6 +40,12 @@ export function createResearchDeps(): ResearchDeps {
   // One robots cache per process: a crawl of twelve pages should read robots.txt
   // once, not twelve times.
   const robots = new RobotsCache(fetchOptions);
+  // Kept on disk locally so repeated test runs reuse paid results; on a deployed
+  // host the disk is ephemeral, so memory is enough.
+  const searchCache = createSearchCache({
+    file: isProduction() ? undefined : path.join(repoRoot, ".cache", "tavily.json"),
+  });
+  const searchBudget = new SearchBudget(env.TAVILY_MAX_SEARCHES);
 
   return {
     crawl: (startUrl) =>
@@ -52,6 +60,8 @@ export function createResearchDeps(): ResearchDeps {
         timeoutMs: env.FETCH_TIMEOUT_MS,
         tavilyApiKey: env.TAVILY_API_KEY,
         companyUrl,
+        cache: searchCache,
+        budget: searchBudget,
       }),
   };
 }

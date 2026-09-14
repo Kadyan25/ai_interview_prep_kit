@@ -8,7 +8,13 @@ import { USER_AGENT } from "./fetchPage.js";
  */
 export async function fetchJson<T>(
   url: string,
-  options: { timeoutMs: number; method?: "GET" | "POST"; body?: unknown; fetchImpl?: typeof fetch },
+  options: {
+    timeoutMs: number;
+    method?: "GET" | "POST";
+    body?: unknown;
+    headers?: Record<string, string>;
+    fetchImpl?: typeof fetch;
+  },
 ): Promise<T | null> {
   const doFetch = options.fetchImpl ?? fetch;
   const controller = new AbortController();
@@ -22,6 +28,7 @@ export async function fetchJson<T>(
         "User-Agent": USER_AGENT,
         Accept: "application/json",
         ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...options.headers,
       },
       ...(options.body ? { body: JSON.stringify(options.body) } : {}),
     });

@@ -1,5 +1,6 @@
 import type { DiscussionHit } from "@prep/shared";
 import { fetchJson } from "./fetchJson.js";
+import type { RawSearchResult, SearchBudget, SearchCache } from "./searchCache.js";
 
 const HN_ENDPOINT = "https://hn.algolia.com/api/v1/search";
 const TAVILY_ENDPOINT = "https://api.tavily.com/search";
@@ -16,7 +17,7 @@ type HnHit = {
   story_text?: string | null;
 };
 
-type TavilyResult = { title?: string; url?: string; content?: string };
+type TavilyResult = RawSearchResult;
 
 function stripHtml(raw: string): string {
   return raw
@@ -96,6 +97,8 @@ export type DiscussionOptions = {
   timeoutMs: number;
   tavilyApiKey?: string | undefined;
   companyUrl?: string | undefined;
+  cache?: SearchCache;
+  budget?: SearchBudget;
   fetchImpl?: typeof fetch;
 };
 
@@ -135,20 +138,38 @@ async function searchTavily(
 ): Promise<DiscussionHit[]> {
   if (!options.tavilyApiKey) return [];
 
+  const cacheKey = `${company.trim().toLowerCase()}|${domainOf(options.companyUrl) ?? ""}`;
+  const cached = await options.cache?.get(cacheKey);
+  if (cached) return relevantTavilyHits(cached, company, options);
+  if (options.budget && !options.budget.trySpend()) return [];
+
   const payload = await fetchJson<{ results?: TavilyResult[] }>(TAVILY_ENDPOINT, {
     timeoutMs: options.timeoutMs,
     method: "POST",
+    headers: { Authorization: `Bearer ${options.tavilyApiKey}` },
     body: {
-      api_key: options.tavilyApiKey,
-      query: `${company} interview process`,
+      query: `"${company}" interview process`,
       max_results: MAX_HITS,
+      // "basic" costs one credit; "advanced" costs two. Never let the API pick.
       search_depth: "basic",
+      auto_parameters: false,
     },
     ...(options.fetchImpl ? { fetchImpl: options.fetchImpl } : {}),
   });
+  // A failed call is not cached, so the next kit may try again.
   if (!payload?.results) return [];
 
-  return payload.results
+  // Raw results are kept so a later change to the relevance filter costs no credits.
+  await options.cache?.set(cacheKey, payload.results);
+  return relevantTavilyHits(payload.results, company, options);
+}
+
+function relevantTavilyHits(
+  results: TavilyResult[],
+  company: string,
+  options: DiscussionOptions,
+): DiscussionHit[] {
+  return results
     .filter((result): result is Required<TavilyResult> => Boolean(result.url && result.title))
     .filter((result) =>
       isAboutInterviewing(result.content ?? "", result.title, company, options.companyUrl),

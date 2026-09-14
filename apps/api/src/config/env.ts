@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 // The repo root holds the single .env. Both the server and the CLI read it.
 const here = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(here, "../../../..");
+export const repoRoot = path.resolve(here, "../../../..");
 loadDotenv({ path: path.join(repoRoot, ".env"), quiet: true });
 loadDotenv({ quiet: true });
 
@@ -37,6 +37,7 @@ const coreSchema = z.object({
     GROQ_MODEL: z.string().default("openai/gpt-oss-120b"),
     LLM_PRIMARY: z.enum(["groq", "gemini"]).default("groq"),
     TAVILY_API_KEY: optionalString,
+    TAVILY_MAX_SEARCHES: intFromEnv(100),
     LLM_CONCURRENCY: intFromEnv(2),
     CRAWL_MAX_PAGES: intFromEnv(12),
     FETCH_TIMEOUT_MS: intFromEnv(10_000),

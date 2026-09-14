@@ -18,6 +18,9 @@ session.md
 issues.md
 git-state.md
 
+# paid search results reused across local runs
+.cache/
+
 # batch outputs
 out.json
 kits.json
