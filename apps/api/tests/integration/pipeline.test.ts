@@ -160,7 +160,7 @@ describe("runPipeline", () => {
     expect(body.warnings?.join(" ")).toMatch(/nice-to-have/);
   });
 
-  it("marks the kit partial when a required item has no question", async () => {
+  it("never ships a required item without a question, and says when code had to write one", async () => {
     const { deps: d } = deps(
       fullHandlers({
         "generateQuestions:behavioural": { questions: [] },
@@ -172,9 +172,38 @@ describe("runPipeline", () => {
       d,
     );
 
-    expect(result.body.coverage.uncovered_requirement_ids).toContain("r4");
-    expect(result.status).toBe("partial");
-    expect(result.body.warnings?.join(" ")).toMatch(/required item/);
+    const { body } = result;
+    expect(body.coverage.uncovered_requirement_ids).not.toContain("r4");
+    const written = body.questions.filter((q) => q.requirement_ids.includes("r4"));
+    expect(written).toHaveLength(1);
+    expect(written[0]!.category).toBe("behavioural");
+    // The must-have is in the plan, as section 8 of the brief requires.
+    expect(body.schedule.days.flatMap((day) => day.question_ids)).toContain(written[0]!.id);
+    expect(body.warnings?.join(" ")).toMatch(/plain practice question/);
+  });
+
+  it("does not accept a technical question's citation as coverage for a behavioural must-have", async () => {
+    const { deps: d, calls } = deps(
+      fullHandlers({
+        "generateQuestions:technical": {
+          questions: [
+            {
+              requirement_ids: ["r1", "r2", "r3", "r4"],
+              prompt: "How would you keep a ledger consistent under retries?",
+              answer_outline: "Idempotency keys, an outbox, and reconciliation.",
+              difficulty: 3,
+            },
+          ],
+        },
+        "generateQuestions:behavioural": { questions: [] },
+      }),
+    );
+    const { body } = await runPipeline({ jd: FULL_JD, companyUrl: "", days: 5 }, d);
+
+    const technical = body.questions.find((q) => q.prompt.startsWith("How would you keep a ledger"));
+    expect(technical!.requirement_ids).not.toContain("r4");
+    // The gap loop ran for r4 instead of trusting the citation.
+    expect(calls.some((c) => c.task === "generateForGaps:behavioural")).toBe(true);
   });
 
   it("spans exactly the requested number of days", async () => {

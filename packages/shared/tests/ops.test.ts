@@ -217,6 +217,35 @@ describe("applyOps — ordering", () => {
   });
 });
 
+describe("applyOps — coverage follows edits", () => {
+  it("marks a must-have uncovered when its only question is deleted", () => {
+    const next = applyOps(state(), [{ op: "delete_question", id: "q2" }]);
+    expect(next.body.coverage.uncovered_requirement_ids).toContain("r3");
+  });
+
+  it("marks it covered again when a fitting question is added", () => {
+    const deleted = applyOps(state(), [{ op: "delete_question", id: "q2" }]);
+    const added = applyOps(deleted, [
+      {
+        op: "add_question",
+        question: {
+          requirement_ids: ["r3"],
+          category: "behavioural",
+          prompt: "How do you mentor someone new to the codebase?",
+          answer_outline: "Pairing, small wins, gradual ownership.",
+          difficulty: 1,
+        },
+      },
+    ]);
+    expect(added.body.coverage.uncovered_requirement_ids).not.toContain("r3");
+  });
+
+  it("does not count a behavioural requirement cited by a technical question", () => {
+    const moved = applyOps(state(), [{ op: "move_question", id: "q2", category: "technical", index: 0 }]);
+    expect(moved.body.coverage.uncovered_requirement_ids).toContain("r3");
+  });
+});
+
 describe("applyOps — pinning", () => {
   it("pins and unpins without changing origin", () => {
     const pinned = applyOps(state(), [{ op: "pin", id: "q1" }]);

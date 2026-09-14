@@ -18,6 +18,9 @@ import {
   type PipelineOutput,
 } from "./types.js";
 
+// A realistic ceiling for one day of preparation alongside a job.
+const LONG_DAY_MINUTES = 8 * 60;
+
 /** The step list the UI renders before anything has run. */
 export const PIPELINE_STEPS = [
   { name: "parse-input", label: "Reading the job description" },
@@ -228,6 +231,12 @@ export async function runPipeline(
   const schedule = await step("schedule", () =>
     allocateSchedule({ requirements: role.requirements, questions, days: parsed.days }),
   );
+  const heaviest = Math.max(0, ...schedule.days.map((d) => d.minutes));
+  if (heaviest > LONG_DAY_MINUTES) {
+    warnings.add(
+      `The busiest day holds about ${Math.round(heaviest / 60)} hours of material, more than fits in one day. It is ordered hardest must-haves first, so stop where the time runs out.`,
+    );
+  }
 
   const source: KitSource = {
     company: companyLabel,

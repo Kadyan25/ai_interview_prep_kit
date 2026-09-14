@@ -9,6 +9,7 @@ import {
   type QuestionCategory,
 } from "./kit.schema.js";
 import type { ItemOrigin, ItemStateMap, KitCounters } from "./types.js";
+import { uncoveredRequirementIds } from "./coverage.js";
 
 /**
  * Edits are operations, not documents.
@@ -331,6 +332,13 @@ export function applyOps(state: KitState, ops: Op[]): KitState {
       }
     }
   }
+
+  // Deleting, moving or re-tagging a question can uncover a requirement. The
+  // stored list is what the role tab flags, so it follows every edit.
+  body.coverage = {
+    ...body.coverage,
+    uncovered_requirement_ids: uncoveredRequirementIds(body.role.requirements, body.questions),
+  };
 
   const validation = validateKitBody(body);
   if (!validation.ok) {
