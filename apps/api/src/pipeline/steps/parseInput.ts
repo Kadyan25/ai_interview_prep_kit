@@ -3,7 +3,10 @@ import type { PipelineInput, Warnings } from "../types.js";
 
 export const THIN_JD_CHARS = 400;
 export const THIN_JD_WORDS = 60;
-export const MAX_JD_CHARS = 50_000;
+// A sanity ceiling, not a posting limit: anything longer is condensed before the
+// model sees it, so a long real posting is never refused. Past this it is not a
+// job description.
+export const MAX_JD_CHARS = 200_000;
 
 export type ParsedInput = {
   jd: string;

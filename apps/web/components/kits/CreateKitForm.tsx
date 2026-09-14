@@ -15,7 +15,8 @@ import { Input, Textarea } from "@/components/ui/Field";
 import { useToast } from "@/components/ui/Toast";
 import { ApiError, api, type CreateKitResponse } from "@/lib/api";
 
-const MAX_JD = 50_000;
+// Matches the API's ceiling; long postings are condensed server-side, not refused.
+const MAX_JD = 200_000;
 
 /**
  * Deliberately permissive: hosts without a dot (localhost, an internal name) and
