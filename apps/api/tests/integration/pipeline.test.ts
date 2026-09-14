@@ -281,6 +281,48 @@ describe("runPipeline", () => {
     expect(seen.some((s) => s.step === "crawl-company" && s.status === "skipped")).toBe(true);
   });
 
+  it("shows the model requirements that come late in a long posting", async () => {
+    // Regression for a live GitLab posting: its requirements started at character
+    // 5,604 and the prompt used to cut at 6,000, hiding six of eight.
+    const intro = Array.from(
+      { length: 110 },
+      (_, i) => `About the company, paragraph ${i}, describing our history and our mission.`,
+    ).join("\n");
+    const lateRequirement = "Experience operating in a SOX-controlled environment is required";
+    const longJd = `${intro}\nWhat You’ll Bring\n${lateRequirement}\n`;
+    expect(longJd.indexOf(lateRequirement)).toBeGreaterThan(6_000);
+
+    let modelSawIt = false;
+    const { llm } = stubLlm({
+      ...fullHandlers(),
+      extractRequirements: (user: string) => {
+        modelSawIt = user.includes(lateRequirement);
+        return {
+          ...EXTRACTED_REQUIREMENTS,
+          requirements: [
+            {
+              text: "SOX-controlled environment experience",
+              kind: "domain",
+              priority: "nice",
+              evidence: lateRequirement,
+              cue: "",
+            },
+          ],
+        };
+      },
+    });
+
+    const { body } = await runPipeline(
+      { jd: longJd, companyUrl: "https://acme.test", days: 3 },
+      { llm, logger: silentLogger },
+    );
+
+    expect(modelSawIt).toBe(true);
+    expect(body.role.requirements).toHaveLength(1);
+    // And its priority is corrected from the posting's own wording.
+    expect(body.role.requirements[0]!.priority).toBe("must");
+  });
+
   it("still builds a kit when the company URL is not a usable address", async () => {
     for (const badUrl of ["not a url at all", "ftp://acme.test/files", "javascript:alert(1)"]) {
       const { deps: d } = deps(fullHandlers());

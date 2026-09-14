@@ -6,6 +6,7 @@ import {
   extractRequirementsUser,
 } from "../prompts/extractRequirements.js";
 import type { DraftRequirement, PipelineDeps, Warnings } from "../types.js";
+import { condenseJobDescription } from "./condenseJd.js";
 import { applyEvidenceRules } from "./evidence.js";
 import type { ParsedInput } from "./parseInput.js";
 
@@ -42,10 +43,17 @@ export async function extractRequirements(
   deps: PipelineDeps,
   warnings: Warnings,
 ): Promise<ExtractedRole> {
+  const fitted = condenseJobDescription(parsed.jd);
+  if (fitted.condensed) {
+    warnings.add(
+      `The job description was ${parsed.jdChars.toLocaleString("en")} characters, so benefits and legal text were set aside before reading its requirements.`,
+    );
+  }
+
   const raw = await deps.llm.generateJson({
     task: "extractRequirements",
     system: extractRequirementsSystem,
-    user: extractRequirementsUser(parsed.jd),
+    user: extractRequirementsUser(fitted.text),
     schema: responseSchema,
     maxOutputTokens: 6144,
   });

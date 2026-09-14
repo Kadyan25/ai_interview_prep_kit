@@ -1,3 +1,4 @@
+import { JD_PROMPT_CHARS } from "../steps/condenseJd.js";
 import { systemFor, untrusted } from "./system.js";
 
 export const extractRequirementsSystem = systemFor(
@@ -23,7 +24,9 @@ Rules you must follow:
 export function extractRequirementsUser(jd: string): string {
   return [
     "Extract the role details and requirements from this job description.",
-    untrusted("jd", jd),
+    // The caller has already fitted the posting to JD_PROMPT_CHARS; this cap is
+    // only a backstop and must never be the thing that shortens a posting.
+    untrusted("jd", jd, JD_PROMPT_CHARS),
     `Reply with JSON of exactly this shape:
 {
   "company": "company name if the posting states one, else \\"\\"",
