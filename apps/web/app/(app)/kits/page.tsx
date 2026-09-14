@@ -11,7 +11,18 @@ import { Dialog } from "@/components/ui/Dialog";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SkeletonList } from "@/components/ui/Skeleton";
 import { useToast } from "@/components/ui/Toast";
-import { api } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
+
+/** Says what actually went wrong, since "try again" only helps for some failures. */
+function loadErrorMessage(error: Error | null): string {
+  if (!(error instanceof ApiError)) return "Something unexpected went wrong. Try again.";
+  if (error.status === 0) return "Could not reach the server. Check your connection and try again.";
+  if (error.status === 502 || error.status === 503 || error.status === 504) {
+    return "The API is not responding yet. On the free tier it can take up to a minute to wake up, so try again shortly.";
+  }
+  if (error.status === 401) return "Your session expired. Taking you to sign in.";
+  return error.message;
+}
 
 export default function KitsPage() {
   const queryClient = useQueryClient();
@@ -54,7 +65,7 @@ export default function KitsPage() {
       {kitsQuery.isError ? (
         <EmptyState
           title="Could not load your kits"
-          description="The API did not respond. It may be waking up — try again in a few seconds."
+          description={loadErrorMessage(kitsQuery.error)}
           action={
             <Button variant="secondary" onClick={() => kitsQuery.refetch()}>
               Retry

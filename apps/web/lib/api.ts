@@ -47,6 +47,10 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   const text = await response.text();
   const payload: unknown = text ? safeJson(text) : null;
 
+  if (response.status === 401 && !CREDENTIAL_PATHS.has(path)) {
+    await endExpiredSession();
+  }
+
   if (!response.ok) {
     const body = payload as { error?: { code?: string; message?: string; details?: unknown } };
     throw new ApiError(
@@ -58,6 +62,28 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   }
 
   return payload as T;
+}
+
+// A 401 from these means a wrong password, not an expired session.
+const CREDENTIAL_PATHS = new Set(["/auth/login", "/auth/register"]);
+
+let redirecting = false;
+
+/**
+ * The cookie is still present but the API no longer accepts it. Clearing it
+ * first matters: middleware sends anyone with a cookie away from /login, so
+ * redirecting without logging out would bounce straight back here.
+ */
+async function endExpiredSession(): Promise<void> {
+  if (redirecting || typeof window === "undefined") return;
+  redirecting = true;
+  try {
+    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+  } catch {
+    // The redirect still has to happen; the login page copes with a stale cookie.
+  }
+  const next = `${window.location.pathname}${window.location.search}`;
+  window.location.assign(`/login?expired=1&next=${encodeURIComponent(next)}`);
 }
 
 function safeJson(text: string): unknown {

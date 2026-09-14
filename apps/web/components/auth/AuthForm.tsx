@@ -18,7 +18,15 @@ const schema = z.object({
 
 type Values = z.infer<typeof schema>;
 
-export function AuthForm({ mode }: { mode: "login" | "register" }) {
+export function AuthForm({
+  mode,
+  next = "/kits",
+  expired = false,
+}: {
+  mode: "login" | "register";
+  next?: string;
+  expired?: boolean;
+}) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
   const {
@@ -35,7 +43,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       } else {
         await api.login(values.email, values.password);
       }
-      router.push("/kits");
+      router.push(next);
       router.refresh();
     } catch (e) {
       setFormError(
@@ -57,6 +65,12 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               : "Your kits and practice history stay on your account."}
           </p>
         </div>
+
+        {expired ? (
+          <p role="status" className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            Your session expired. Sign in again and you will go back to where you were.
+          </p>
+        ) : null}
 
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <Input

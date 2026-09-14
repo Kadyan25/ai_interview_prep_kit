@@ -17,9 +17,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (hasToken && (pathname === "/login" || pathname === "/register")) {
+  // An expired session may still carry its cookie; bouncing it to /kits would
+  // loop straight back here and lose where the user was going.
+  const expired = request.nextUrl.searchParams.get("expired") === "1";
+
+  if (hasToken && !expired && (pathname === "/login" || pathname === "/register")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/kits";
+    const next = request.nextUrl.searchParams.get("next");
+    url.pathname = next && next.startsWith("/kits") ? next : "/kits";
     url.search = "";
     return NextResponse.redirect(url);
   }
