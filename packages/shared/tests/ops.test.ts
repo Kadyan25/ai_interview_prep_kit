@@ -198,6 +198,23 @@ describe("applyOps — ordering", () => {
     ]);
     expect(idsIn(next, "technical")).toEqual(["q1", "q2"]);
   });
+
+  it("accepts the end-of-list index the category picker sends", () => {
+    const ops = parseOps([
+      { op: "move_question", id: "q2", category: "technical", index: Number.MAX_SAFE_INTEGER },
+    ]);
+    expect(idsIn(applyOps(state(), ops), "technical").at(-1)).toBe("q2");
+  });
+
+  it("refuses to move a question with no requirement out of company fit", () => {
+    const base = state();
+    const orphan = { ...base.body.questions[0]!, id: "q9", category: "company-fit" as const, requirement_ids: [] };
+    const withOrphan = applyOps(base, [{ op: "add_question", question: orphan }]);
+    const added = withOrphan.body.questions.find((q) => q.prompt === orphan.prompt && q.category === "company-fit")!;
+    expect(() =>
+      applyOps(withOrphan, [{ op: "move_question", id: added.id, category: "technical", index: 0 }]),
+    ).toThrow(OpsError);
+  });
 });
 
 describe("applyOps — pinning", () => {

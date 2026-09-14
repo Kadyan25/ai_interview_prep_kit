@@ -16,7 +16,21 @@ const CATEGORY_LABEL: Record<QuestionCategory, string> = {
   "company-fit": "Company fit",
 };
 
-const DIFFICULTIES: { value: 1 | 2 | 3; label: string }[] = [
+const CATEGORIES = Object.keys(CATEGORY_LABEL) as QuestionCategory[];
+
+/**
+ * Mirrors the kit schema: only company-fit questions may stand without a
+ * requirement, so a question with none can move there and nowhere else.
+ */
+function canMoveTo(question: Question, category: QuestionCategory): boolean {
+  return (
+    category === question.category ||
+    category === "company-fit" ||
+    question.requirement_ids.length > 0
+  );
+}
+
+const DIFFICULTIES:{ value: 1 | 2 | 3; label: string }[] = [
   { value: 1, label: "Warm-up" },
   { value: 2, label: "Standard" },
   { value: 3, label: "Hardest" },
@@ -107,7 +121,37 @@ export function QuestionCard({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
-            <Badge tone="neutral">{CATEGORY_LABEL[question.category]}</Badge>
+            <label className="sr-only" htmlFor={`category-${question.id}`}>
+              Move to category
+            </label>
+            <select
+              id={`category-${question.id}`}
+              value={question.category}
+              disabled={locked}
+              onChange={(e) =>
+                onApply([
+                  {
+                    op: "move_question",
+                    id: question.id,
+                    category: e.target.value as QuestionCategory,
+                    // Past the end is clamped by the reducer: the question lands last.
+                    index: Number.MAX_SAFE_INTEGER,
+                  },
+                ])
+              }
+              className="rounded-full border border-line bg-zinc-50 px-2 py-0.5 text-xs text-zinc-700"
+            >
+              {CATEGORIES.map((category) => (
+                <option
+                  key={category}
+                  value={category}
+                  disabled={!canMoveTo(question, category)}
+                >
+                  {CATEGORY_LABEL[category]}
+                  {canMoveTo(question, category) ? "" : " (needs a requirement)"}
+                </option>
+              ))}
+            </select>
 
             <label className="sr-only" htmlFor={`difficulty-${question.id}`}>
               Difficulty
