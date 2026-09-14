@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { z } from "zod";
+import type { EvaluateOutput } from "@prep/shared";
 import { coreEnv, requireLlmKey } from "../config/env.js";
 import { AppError, toAppError } from "../lib/errors.js";
 import { logger } from "../lib/logger.js";
@@ -8,20 +8,8 @@ import { createLlmFromEnv } from "../llm/factory.js";
 import type { PipelineDeps } from "../pipeline/types.js";
 import { createResearchDeps } from "../retrieval/index.js";
 import { parseArgs } from "./args.js";
+import { readCases, type BatchCase } from "./cases.js";
 import { runBatch } from "./runBatch.js";
-
-const caseSchema = z.object({
-  id: z.string().min(1),
-  jd: z.string(),
-  company_url: z.string().default(""),
-  days: z.number().int().min(1).max(60),
-});
-
-// Accept a bare array or an object with a cases key; both turn up in the wild.
-const inputSchema = z.union([
-  z.array(caseSchema),
-  z.object({ cases: z.array(caseSchema) }).transform((v) => v.cases),
-]);
 
 const USAGE = `Usage: npm run evaluate -- --input <cases.json> --output <kits.json>
 
@@ -64,12 +52,25 @@ async function main(): Promise<void> {
   const inputPath = resolveFromInvocation(args.input);
   const outputPath = resolveFromInvocation(args.output);
 
-  let cases: z.infer<typeof caseSchema>[];
+  let cases: BatchCase[];
   try {
     const raw = await readFile(inputPath, "utf8");
-    cases = inputSchema.parse(JSON.parse(raw));
+    cases = readCases(JSON.parse(raw));
   } catch (error) {
     stderr(`Could not read cases from ${inputPath}: ${error instanceof Error ? error.message : error}`);
+    process.exit(2);
+  }
+
+  // Write once before any model call: an unwritable output path should fail in a
+  // second, not after fifteen minutes of generation.
+  const persist = async (payload: EvaluateOutput) => {
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await writeFile(outputPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  };
+  try {
+    await persist({ version: "1.0", generated_at: new Date().toISOString(), kits: [] });
+  } catch (error) {
+    stderr(`Cannot write ${outputPath}: ${error instanceof Error ? error.message : error}`);
     process.exit(2);
   }
 
@@ -89,16 +90,16 @@ async function main(): Promise<void> {
 
   const startedAll = Date.now();
 
-  const payload = await runBatch(cases, deps, (event) => {
-    stderr(
-      `[${event.index + 1}/${event.total}] ${event.id} ${event.status} in ${formatDuration(
-        event.durationMs,
-      )} — ${event.detail}`,
-    );
+  const payload = await runBatch(cases, deps, {
+    onProgress: (event) => {
+      stderr(
+        `[${event.index + 1}/${event.total}] ${event.id} ${event.status} in ${formatDuration(
+          event.durationMs,
+        )} — ${event.detail}`,
+      );
+    },
+    persist,
   });
-
-  await mkdir(path.dirname(outputPath), { recursive: true });
-  await writeFile(outputPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 
   const ok = payload.kits.filter((r) => r.status === "ok").length;
   stderr(

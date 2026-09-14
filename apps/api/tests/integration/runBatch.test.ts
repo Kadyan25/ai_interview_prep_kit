@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { validateKitBody, type EvaluateCase } from "@prep/shared";
+import { CasesFileError, readCases } from "../../src/cli/cases.js";
 import { runBatch } from "../../src/cli/runBatch.js";
 import { silentLogger, stubLlm } from "../helpers/stubLlm.js";
 import { EXTRACTED_REQUIREMENTS, FULL_JD } from "../fixtures/jd.js";
@@ -119,10 +120,62 @@ describe("runBatch", () => {
   it("reports progress for every case", async () => {
     const events: string[] = [];
     const { llm } = stubLlm(handlers);
-    await runBatch([goodCase, badCase], { llm, logger: silentLogger }, (event) =>
-      events.push(`${event.id}:${event.status}`),
-    );
+    await runBatch([goodCase, badCase], { llm, logger: silentLogger }, {
+      onProgress: (event) => events.push(`${event.id}:${event.status}`),
+    });
 
     expect(events).toEqual(["case-1:ok", "case-2:failed"]);
+  });
+
+  it("hands over everything so far after each case, so a late crash keeps earlier kits", async () => {
+    const { llm } = stubLlm(handlers);
+    const snapshots: number[] = [];
+    await runBatch([goodCase, badCase], { llm, logger: silentLogger }, {
+      persist: async (payload) => {
+        snapshots.push(payload.kits.length);
+      },
+    });
+    expect(snapshots).toEqual([1, 2]);
+  });
+});
+
+describe("readCases", () => {
+  const good = { id: "a", jd: FULL_JD, company_url: "https://acme.test", days: 5 };
+
+  it("keeps one malformed case from rejecting the whole file", async () => {
+    const cases = readCases([
+      good,
+      { ...good, id: "too-many-days", days: 61 },
+      { ...good, id: "fractional", days: 2.5 },
+      { ...good, id: "string-days", days: "7" },
+      { ...good, id: "null-url", company_url: null },
+      { ...good, id: 4 },
+      { id: "no-jd", company_url: "", days: 3 },
+      "not an object",
+    ]);
+    expect(cases).toHaveLength(8);
+
+    const { llm } = stubLlm(handlers);
+    const output = await runBatch(cases, { llm, logger: silentLogger });
+    const byId = Object.fromEntries(output.kits.map((k) => [k.id, k]));
+
+    expect(output.kits).toHaveLength(8);
+    expect(byId.a!.status).toBe("ok");
+    expect(byId["too-many-days"]!.error?.code).toBe("INVALID_INPUT");
+    expect(byId.fractional!.error?.code).toBe("INVALID_INPUT");
+    expect(byId["string-days"]!.status).toBe("ok");
+    expect(byId["null-url"]!.status).toBe("ok");
+    expect(byId["4"]!.status).toBe("ok");
+    expect(byId["no-jd"]!.error?.message).toMatch(/jd must be a string/);
+    expect(byId["case-8"]!.error?.message).toMatch(/not a JSON object/);
+  });
+
+  it("accepts an object with a cases array", () => {
+    expect(readCases({ cases: [good] })).toHaveLength(1);
+  });
+
+  it("rejects a file that is not a list of cases at all", () => {
+    expect(() => readCases({ nope: true })).toThrow(CasesFileError);
+    expect(() => readCases("text")).toThrow(CasesFileError);
   });
 });
