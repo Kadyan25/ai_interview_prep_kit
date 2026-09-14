@@ -281,6 +281,32 @@ describe("runPipeline", () => {
     expect(seen.some((s) => s.step === "crawl-company" && s.status === "skipped")).toBe(true);
   });
 
+  it("still builds a kit when the company URL is not a usable address", async () => {
+    for (const badUrl of ["not a url at all", "ftp://acme.test/files", "javascript:alert(1)"]) {
+      const { deps: d } = deps(fullHandlers());
+      const result = await runPipeline({ jd: FULL_JD, companyUrl: badUrl, days: 4 }, d);
+
+      expect(validateKitBody(result.body).ok, badUrl).toBe(true);
+      // Research could not happen, so the kit is honest about being partial.
+      expect(result.status, badUrl).toBe("partial");
+      expect(result.body.source.company_url, badUrl).toBe(badUrl);
+      expect(result.body.source.pages_used, badUrl).toEqual([]);
+      expect(result.body.warnings?.join(" "), badUrl).toMatch(/company was not researched/);
+      expect(result.body.role.requirements.length, badUrl).toBeGreaterThan(0);
+    }
+  });
+
+  it("reports why the crawl was skipped for an unusable URL", async () => {
+    const seen: { step: string; status: string; note?: string }[] = [];
+    const { llm } = stubLlm(fullHandlers());
+    await runPipeline(
+      { jd: FULL_JD, companyUrl: "not a url", days: 3 },
+      { llm, logger: silentLogger, onProgress: (step, status, note) => { seen.push({ step, status, note }); } },
+    );
+    const crawl = seen.find((s) => s.step === "crawl-company");
+    expect(crawl).toMatchObject({ status: "skipped", note: "The company URL was not usable" });
+  });
+
   it("refuses an empty job description", async () => {
     const { deps: d } = deps(fullHandlers());
     await expect(

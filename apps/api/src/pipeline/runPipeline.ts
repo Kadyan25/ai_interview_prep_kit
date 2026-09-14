@@ -85,7 +85,11 @@ export async function runPipeline(
   let reachable = false;
 
   if (!parsed.companyUrl) {
-    await report("crawl-company", "skipped", "No company URL was supplied");
+    await report(
+      "crawl-company",
+      "skipped",
+      parsed.companyUrlProblem ? "The company URL was not usable" : "No company URL was supplied",
+    );
   } else if (!deps.research) {
     await report("crawl-company", "skipped", "Research is disabled for this run");
   } else {
@@ -227,7 +231,8 @@ export async function runPipeline(
 
   const source: KitSource = {
     company: companyLabel,
-    company_url: parsed.companyUrl ?? "",
+    // What was supplied, even if it could not be crawled, so the kit shows what was attempted.
+    company_url: parsed.companyUrl ?? parsed.rawCompanyUrl,
     role: role.title,
     location: role.location,
     jd_chars: parsed.jdChars,
@@ -288,7 +293,8 @@ export async function runPipeline(
   );
   // "partial" means the kit is usable but something honest is missing from it.
   const siteUnreachable =
-    Boolean(parsed.companyUrl) && Boolean(deps.research) && (!reachable || pages.length === 0);
+    Boolean(parsed.companyUrlProblem) ||
+    (Boolean(parsed.companyUrl) && Boolean(deps.research) && (!reachable || pages.length === 0));
 
   return {
     body,

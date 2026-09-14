@@ -12,10 +12,35 @@ export type ParsedInput = {
   isThin: boolean;
   /** null when no usable company URL was supplied. */
   companyUrl: string | null;
+  /** Exactly what was supplied, recorded in the kit even when it was unusable. */
+  rawCompanyUrl: string;
+  /** Why a supplied URL could not be used, or null when it was fine or absent. */
+  companyUrlProblem: string | null;
   /** Best guess before research; the model may replace it with the real name. */
   companyLabel: string;
   days: number;
 };
+
+function withScheme(raw: string): string {
+  return /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+}
+
+/** Plain-language reason a URL cannot be crawled, or null when it can. */
+function urlProblem(raw: string): string | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(withScheme(raw));
+  } catch {
+    return "is not a valid web address";
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    return "is not an http or https address";
+  }
+  if (!parsed.hostname || /\s/.test(raw)) {
+    return "is not a valid web address";
+  }
+  return null;
+}
 
 function guessCompanyFromHost(hostname: string): string {
   const bare = hostname.replace(/^www\./, "");
@@ -48,26 +73,37 @@ export function parseInput(input: PipelineInput, warnings: Warnings): ParsedInpu
     );
   }
 
-  const rawUrl = input.companyUrl?.trim() ?? "";
+  const rawCompanyUrl = input.companyUrl?.trim() ?? "";
   let companyUrl: string | null = null;
+  let companyUrlProblem: string | null = null;
   let companyLabel = "the company";
 
-  if (rawUrl.length === 0) {
+  if (rawCompanyUrl.length === 0) {
     warnings.add("No company URL was supplied, so the brief is based on the job description alone.");
   } else {
-    const withScheme = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
-    let parsed: URL;
-    try {
-      parsed = new URL(withScheme);
-    } catch {
-      throw new AppError("INVALID_INPUT", `"${rawUrl}" is not a usable company URL.`);
+    // A bad URL costs the research, not the kit. The brief reserves "failed" for a
+    // case that produces no kit at all, and the posting alone still produces one.
+    companyUrlProblem = urlProblem(rawCompanyUrl);
+    if (companyUrlProblem) {
+      warnings.add(
+        `The company URL "${rawCompanyUrl}" ${companyUrlProblem}, so the company was not researched and the brief is based on the job description alone.`,
+      );
+    } else {
+      const parsed = new URL(withScheme(rawCompanyUrl));
+      companyUrl = parsed.toString();
+      companyLabel = guessCompanyFromHost(parsed.hostname);
     }
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      throw new AppError("INVALID_INPUT", `"${rawUrl}" is not an http or https URL.`);
-    }
-    companyUrl = parsed.toString();
-    companyLabel = guessCompanyFromHost(parsed.hostname);
   }
 
-  return { jd, jdChars: jd.length, wordCount, isThin, companyUrl, companyLabel, days };
+  return {
+    jd,
+    jdChars: jd.length,
+    wordCount,
+    isThin,
+    companyUrl,
+    rawCompanyUrl,
+    companyUrlProblem,
+    companyLabel,
+    days,
+  };
 }
