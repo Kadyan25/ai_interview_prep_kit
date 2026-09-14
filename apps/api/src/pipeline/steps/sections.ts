@@ -13,20 +13,50 @@ export type HeadingKind = "must" | "nice" | "neutral" | "boilerplate";
 const MAX_HEADING_CHARS = 60;
 
 // Checked before MUST so "preferred qualifications" is not read as a must.
-const NICE_HEADING =
-  /^(nice[- ]to[- ]haves?|good[- ]to[- ]haves?|bonus( points)?( if you have)?|preferred( qualifications| skills| experience)?|pluses|extra credit|it'?s a plus( if you have)?|ideally( you have)?|desirable( skills| criteria)?|what would make you stand out|you might also have|additional (qualifications|skills)|even better if you have)$/;
+// Each lexicon ends with the German, French, Spanish and Japanese headings seen
+// in real postings, since the model's own priority is all that is left otherwise.
+const NICE_HEADING = new RegExp(
+  "^(" +
+    [
+      "nice[- ]to[- ]haves?", "good[- ]to[- ]haves?", "bonus( points)?( if you have)?",
+      "preferred( qualifications| skills| experience)?", "desired( qualifications| skills| experience)?",
+      "pluses", "extra credit", "it'?s a plus( if you have)?", "ideally( you have)?",
+      "desirable( skills| criteria)?", "what would make you stand out", "you might also have",
+      "additional (qualifications|skills)", "even better if you have", "bonus if you have",
+      "wünschenswert", "von vorteil", "atouts?", "(ce qui )?serait un plus", "se valorará", "deseable",
+      "valorable", "歓迎(スキル|条件|要件)?",
+    ].join("|") +
+    ")$",
+);
 
-const MUST_HEADING =
-  /^(requirements|job requirements|minimum (qualifications|requirements)|basic qualifications|qualifications|required( qualifications| skills| experience)?|what you('ll| will)? (bring|need)|what we('re| are) looking for|who you are|about you|you (have|bring|are|should have)|must[- ]haves?|essential (skills|criteria)|skills( and| &) experience|experience( and| &) skills|your (skills|experience|background|profile)|what you need to succeed|key (requirements|qualifications|skills))$/;
+const MUST_HEADING = new RegExp(
+  "^(" +
+    [
+      "requirements", "job requirements", "minimum (qualifications|requirements)", "basic qualifications",
+      "qualifications", "required( qualifications| skills| experience)?",
+      "requirements (and|&) qualifications", "qualifications (and|&) (experience|skills)",
+      "what you('ll| will)? (bring|need)( to (the|this|our) (team|role|table))?",
+      "you('ll| will) need", "what we('re| are) looking for( in you)?", "who we('re| are) looking for",
+      "the ideal candidate", "who you are", "about you", "you (have|bring|are|should have)",
+      "must[- ]haves?", "essential (skills|criteria)", "skills( and| &) experience",
+      "experience( and| &) skills", "skills", "experience",
+      "your (skills|experience|background|profile|qualifications)", "what you need to succeed",
+      "key (requirements|qualifications|skills)",
+      "anforderungen", "dein profil", "ihr profil", "was du mitbringst", "was sie mitbringen",
+      "qualifikationen", "voraussetzungen", "profil recherché", "votre profil", "compétences requises",
+      "prérequis", "requisitos", "tu perfil", "perfil", "lo que buscamos", "必須(スキル|条件|要件)", "応募資格",
+    ].join("|") +
+    ")$",
+);
 
 // Sections that are not requirements and contain none; also safe to drop from a
 // posting that is too long to send whole.
 const BOILERPLATE_HEADING =
-  /^(benefits|our benefits|perks( and benefits)?|benefits( and| &) perks|what we offer|compensation|salary|pay (range|transparency)|equal (employment )?opportunity.*|eeo( statement)?|diversity.*|accommodations?|privacy( notice| policy)?|how to apply|application process|how gitlab supports.*|how we support you)$/;
+  /^(benefits|our benefits|perks( and benefits)?|benefits( and| &) perks|what we offer|compensation|salary|pay (range|transparency)|equal (employment )?opportunity.*|eeo( statement)?|diversity.*|accommodations?|privacy( notice| policy)?|how to apply|application process|how gitlab supports.*|how we support you|(was )?wir bieten|avantages|ce que nous (offrons|proposons)|beneficios|lo que ofrecemos|福利厚生)$/;
 
 // Real sections that simply carry no priority signal.
 const NEUTRAL_HEADING =
-  /^(about (us|the (team|role|company|job|position))|the role|the team|what you('ll| will) do|responsibilities|key responsibilities|your (role|responsibilities|impact)|in this role|day to day|who we are|why (join|work).*|our (mission|values|culture|process|hiring process)|location|overview|job description|role overview)$/;
+  /^(about (us|the (team|role|company|job|position))|the role|the team|what you('ll| will) do|responsibilities|key responsibilities|your (role|responsibilities|impact)|in this role|day to day|who we are|why (join|work).*|our (mission|values|culture|process|hiring process)|location|overview|job description|role overview|(deine|ihre) aufgaben|über uns|(vos )?missions|à propos|responsabilidades|sobre nosotros|funciones|業務内容)$/;
 
 function clean(line: string): string {
   return line

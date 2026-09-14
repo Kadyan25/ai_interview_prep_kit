@@ -1,6 +1,8 @@
 import type { RequirementPriority } from "@prep/shared";
 import type { DraftRequirement } from "../types.js";
-import { classifyHeading, headingLabel } from "./sections.js";
+import { CUES, NEGATION_BEFORE, cuePattern } from "./cues.js";
+import { isDuplicate, quoteSupportsText } from "./relatedness.js";
+import { classifyHeading, headingLabel, type HeadingKind } from "./sections.js";
 
 /**
  * Anti-invention. The model must quote the job description verbatim for every
@@ -9,38 +11,6 @@ import { classifyHeading, headingLabel } from "./sections.js";
  * Priority is then re-derived in code from the words around the quote, so
  * "nice to have" cannot be silently promoted to a must.
  */
-
-const NICE_CUES = [
-  "nice to have",
-  "nice-to-have",
-  "good to have",
-  "bonus",
-  "a plus",
-  "plus",
-  "preferred",
-  "preferably",
-  "ideally",
-  "desirable",
-  "familiarity",
-  "exposure to",
-  "optional",
-];
-
-const MUST_CUES = [
-  "required",
-  "must have",
-  "must",
-  "need to",
-  "you need",
-  "essential",
-  "minimum",
-  "at least",
-  "proven",
-  "strong",
-  "solid",
-  "expert",
-  "deep experience",
-];
 
 const MIN_EVIDENCE_CHARS = 8;
 // Long enough to reach the heading of a real requirements section of ten or more bullets.
@@ -109,26 +79,39 @@ export function findEvidence(jd: string, evidence: string): number {
   return at >= 0 ? looseHaystack.origin[at]! : -1;
 }
 
-type CueHit = { priority: RequirementPriority; distance: number; cue: string };
+type CueHit = { priority: RequirementPriority; distance: number; cue: string; explicit: boolean };
 
+/**
+ * The cue that decides a span's priority. Any explicit cue beats every implicit
+ * one; among equals the nearest wins, and on a tie nice beats must, because
+ * "strong plus" starts where "strong" does.
+ */
 function findCues(haystack: string, spanStart: number, spanEnd: number): CueHit | null {
   let best: CueHit | null = null;
 
-  const consider = (cue: string, priority: RequirementPriority) => {
-    const pattern = new RegExp(`\\b${cue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "g");
-    for (let match = pattern.exec(haystack); match; match = pattern.exec(haystack)) {
-      const start = match.index;
+  for (const { phrase, priority, explicit } of CUES) {
+    for (const match of haystack.matchAll(cuePattern(phrase))) {
+      const start = match.index ?? 0;
       const end = start + match[0].length;
-      const distance =
-        end <= spanStart ? spanStart - end : start >= spanEnd ? start - spanEnd : 0;
-      if (!best || distance < best.distance) best = { priority, distance, cue };
+      const distance = end <= spanStart ? spanStart - end : start >= spanEnd ? start - spanEnd : 0;
+      const negated = priority === "must" && NEGATION_BEFORE.test(haystack.slice(Math.max(0, start - 40), start));
+      const hit: CueHit = {
+        priority: negated ? "nice" : priority,
+        distance,
+        cue: negated ? `not ${phrase}` : phrase,
+        explicit: explicit || negated,
+      };
+      if (!best || outranks(hit, best)) best = hit;
     }
-  };
-
-  for (const cue of NICE_CUES) consider(cue, "nice");
-  for (const cue of MUST_CUES) consider(cue, "must");
+  }
 
   return best;
+}
+
+function outranks(hit: CueHit, best: CueHit): boolean {
+  if (hit.explicit !== best.explicit) return hit.explicit;
+  if (hit.distance !== best.distance) return hit.distance < best.distance;
+  return hit.priority === "nice" && best.priority === "must";
 }
 
 /** The clause of a segment that contains a position. */
@@ -155,7 +138,9 @@ function clauseAround(segment: string, position: number): { start: number; end: 
  * the first heading of any kind, so a bullet under "Benefits" never inherits the
  * "Requirements" heading further up the page.
  */
-function governingHeading(linesAbove: string[]): { priority: RequirementPriority; cue: string } | null {
+type NearestHeading = { kind: HeadingKind; line: string } | { kind: "other"; line: string };
+
+function nearestHeading(linesAbove: string[]): NearestHeading | null {
   let scanned = 0;
   for (let i = linesAbove.length - 1; i >= 0 && scanned < HEADING_LOOKBACK_LINES; i -= 1) {
     const line = linesAbove[i]!.trim();
@@ -163,16 +148,32 @@ function governingHeading(linesAbove: string[]): { priority: RequirementPriority
     scanned += 1;
 
     const kind = classifyHeading(line);
-    if (kind === "must" || kind === "nice") return { priority: kind, cue: headingLabel(line) };
-    if (kind === "neutral" || kind === "boilerplate") return null;
-
+    if (kind) return { kind, line };
     // A short line ending in a colon is a heading even when its wording is unusual.
-    if (line.length <= HEADING_MAX_CHARS && line.endsWith(":")) {
-      const hit = findCues(line, line.length, line.length);
-      return hit ? { priority: hit.priority, cue: hit.cue } : null;
-    }
+    if (line.length <= HEADING_MAX_CHARS && line.endsWith(":")) return { kind: "other", line };
   }
   return null;
+}
+
+function governingHeading(linesAbove: string[]): { priority: RequirementPriority; cue: string } | null {
+  const heading = nearestHeading(linesAbove);
+  if (!heading) return null;
+  if (heading.kind === "must" || heading.kind === "nice") {
+    return { priority: heading.kind, cue: headingLabel(heading.line) };
+  }
+  if (heading.kind !== "other") return null;
+  const hit = findCues(heading.line, heading.line.length, heading.line.length);
+  return hit ? { priority: hit.priority, cue: hit.cue } : null;
+}
+
+/** The kind of section a quote sits in, so a line under "Benefits" is never read as a requirement. */
+export function sectionKindAt(jd: string, evidence: string): HeadingKind | null {
+  const index = findEvidence(jd, evidence);
+  if (index < 0) return null;
+  const lined = normalise(jd, true);
+  const segmentStart = lined.lastIndexOf("\n", Math.max(index - 1, 0)) + 1;
+  const heading = nearestHeading(lined.slice(0, segmentStart).split("\n"));
+  return heading && heading.kind !== "other" ? heading.kind : null;
 }
 
 /**
@@ -224,31 +225,38 @@ export function derivePriority(
   return { priority: modelPriority, cue: null };
 }
 
+export type DropReason = "not in posting" | "quote unrelated" | "benefits or legal text";
+
 export type EvidenceOutcome = {
   kept: DraftRequirement[];
-  dropped: { text: string; evidence: string }[];
+  dropped: { text: string; evidence: string; reason: DropReason }[];
   reprioritised: { text: string; from: RequirementPriority; to: RequirementPriority; cue: string }[];
 };
+
+function whyDrop(jd: string, text: string, evidence: string): DropReason | null {
+  if (findEvidence(jd, evidence) < 0) return "not in posting";
+  if (!quoteSupportsText(jd, text, evidence)) return "quote unrelated";
+  if (sectionKindAt(jd, evidence) === "boilerplate") return "benefits or legal text";
+  return null;
+}
 
 export function applyEvidenceRules(jd: string, drafts: DraftRequirement[]): EvidenceOutcome {
   const kept: DraftRequirement[] = [];
   const dropped: EvidenceOutcome["dropped"] = [];
   const reprioritised: EvidenceOutcome["reprioritised"] = [];
-  const seen = new Set<string>();
 
   for (const draft of drafts) {
     const text = draft.text?.trim() ?? "";
     const evidence = draft.evidence?.trim() ?? "";
     if (text.length === 0) continue;
 
-    if (findEvidence(jd, evidence) < 0) {
-      dropped.push({ text, evidence });
+    const reason = whyDrop(jd, text, evidence);
+    if (reason) {
+      dropped.push({ text, evidence, reason });
       continue;
     }
 
-    const key = normaliseForMatch(text);
-    if (seen.has(key)) continue;
-    seen.add(key);
+    if (kept.some((other) => isDuplicate(other, { text, evidence }))) continue;
 
     const { priority, cue } = derivePriority(jd, evidence, draft.priority);
     if (cue && priority !== draft.priority) {
