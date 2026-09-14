@@ -53,15 +53,33 @@ export async function writeBrief(
     );
   }
 
-  const howTheyHire = context.hiringProcess
-    ? brief.how_they_hire.trim() ||
-      "Their hiring page describes a process; see the linked source."
-    : "No public description of their interview process was found, so prepare for a standard loop.";
-
   return {
     summary: brief.summary.trim(),
     what_they_do: brief.what_they_do.trim(),
     sources,
-    how_they_hire: howTheyHire,
+    how_they_hire: howTheyHire(context, brief.how_they_hire.trim()),
   };
+}
+
+const NOTHING_FOUND =
+  "No public description of their interview process was found, so prepare for a standard loop.";
+
+/**
+ * Which source the process description rests on decides how it is worded. A
+ * company's own page is stated as fact; candidate posts are labelled as reports,
+ * because a thread from three years ago is not the company's current process.
+ */
+export function howTheyHire(
+  context: Pick<BriefContext, "hiringProcess" | "discussion">,
+  modelText: string,
+): string {
+  if (context.hiringProcess) {
+    return modelText || "Their hiring page describes a process; see the linked source.";
+  }
+  // Models sometimes answer "nothing was found" instead of the empty string asked for.
+  const saysNothing = /^(there (is|was|were|are) )?(no|none)\b/i.test(modelText);
+  if (context.discussion.length > 0 && modelText && !saysNothing) {
+    return `Their site does not describe the process. Unverified candidate reports: ${modelText}`;
+  }
+  return NOTHING_FOUND;
 }

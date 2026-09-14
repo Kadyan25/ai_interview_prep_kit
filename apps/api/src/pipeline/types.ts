@@ -41,7 +41,7 @@ export type CrawlResult = {
  */
 export type ResearchDeps = {
   crawl(startUrl: string): Promise<CrawlResult>;
-  searchDiscussion(companyName: string): Promise<DiscussionHit[]>;
+  searchDiscussion(companyName: string, companyUrl?: string): Promise<DiscussionHit[]>;
 };
 
 export type PipelineDeps = {

@@ -12,6 +12,9 @@ Rules:
   that the candidate could repeat it in an interview.
 - "how_they_hire" describes their interview process if a source describes it. If no
   source does, say plainly that no public description of their process was found.
+- If their hiring page is not provided but public discussion is, "how_they_hire"
+  summarises only what candidates report about the process (stages, formats, topics),
+  attributed to candidates. If the discussion says nothing about the process, return "".
 - If the only source is the job description, say that the brief is inferred from the
   posting alone. Do not dress up a guess as research.`,
 );

@@ -47,10 +47,11 @@ export function createResearchDeps(): ResearchDeps {
         fetch: fetchOptions,
         robots,
       }),
-    searchDiscussion: (companyName) =>
+    searchDiscussion: (companyName, companyUrl) =>
       searchDiscussion(companyName, {
         timeoutMs: env.FETCH_TIMEOUT_MS,
         tavilyApiKey: env.TAVILY_API_KEY,
+        companyUrl,
       }),
   };
 }

@@ -36,16 +36,66 @@ function snippet(text: string): string {
   return clean.length > SNIPPET_CHARS ? `${clean.slice(0, SNIPPET_CHARS)}…` : clean;
 }
 
-/** Guards against a search for "Acme" returning threads about something else. */
-function mentionsCompany(haystack: string, company: string): boolean {
-  const name = company.trim().toLowerCase();
+// Phrases about being a candidate. A bare "interview" also matches press
+// interviews with founders, and a bare "hiring" matches opinion threads.
+const HIRING_TERMS =
+  /\b(interview(?:s|ing)? (?:process|loop|rounds?|questions?|experience|stages?|for)|interviewed (?:at|with|for)|(?:hiring|recruiting) (?:process|manager|bar)|got hired|recruiters?|on-?site interview|take-?home|leetcode|phone screen|coding (?:test|challenge|round|exercise)|system design (?:round|interview)|(?:job )?offer from)\b/i;
+// Monthly hiring threads mention hundreds of companies, none of them about interviewing.
+const HIRING_THREAD = /who is hiring|who wants to be hired|seeking freelancer/i;
+// How far either side of the company name a hiring term may sit and still be about it.
+const NEAR_CHARS = 160;
+// Names this short are also ordinary words ("Hex", "Box", "Ramp"), so case must match.
+const SHORT_NAME_CHARS = 4;
+
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** The company's own domain, e.g. "hex.tech", which is an unambiguous mention. */
+function domainOf(companyUrl: string | undefined): string | null {
+  if (!companyUrl) return null;
+  try {
+    return new URL(companyUrl).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Guards against a search for "Hex" returning threads about hex editors. The
+ * name must appear as a whole word (case-sensitive when short) with an
+ * interview or hiring term close by; a mention of the company's domain counts.
+ */
+export function isAboutInterviewing(
+  text: string,
+  title: string,
+  company: string,
+  companyUrl?: string,
+): boolean {
+  if (HIRING_THREAD.test(title)) return false;
+  const name = company.trim();
   if (name.length < 3) return false;
-  return haystack.toLowerCase().includes(name);
+
+  const patterns = [
+    new RegExp(`\\b${escapeRegExp(name)}\\b`, name.length <= SHORT_NAME_CHARS ? "g" : "gi"),
+  ];
+  const domain = domainOf(companyUrl);
+  if (domain) patterns.push(new RegExp(escapeRegExp(domain), "gi"));
+
+  const haystack = `${title}\n${text}`;
+  return patterns.some((pattern) =>
+    [...haystack.matchAll(pattern)].some((match) => {
+      const at = match.index ?? 0;
+      const window = haystack.slice(Math.max(0, at - NEAR_CHARS), at + match[0].length + NEAR_CHARS);
+      return HIRING_TERMS.test(window);
+    }),
+  );
 }
 
 export type DiscussionOptions = {
   timeoutMs: number;
   tavilyApiKey?: string | undefined;
+  companyUrl?: string | undefined;
   fetchImpl?: typeof fetch;
 };
 
@@ -65,9 +115,9 @@ async function searchHackerNews(
   for (const hit of payload.hits) {
     const title = (hit.title ?? hit.story_title ?? "").trim();
     const body = hit.comment_text ?? hit.story_text ?? "";
-    const combined = `${title} ${stripHtml(body)}`;
-    if (!mentionsCompany(combined, company)) continue;
-    if (stripHtml(body).length < 40 && title.length === 0) continue;
+    const text = stripHtml(body);
+    if (text.length < 40 && title.length === 0) continue;
+    if (!isAboutInterviewing(text, title, company, options.companyUrl)) continue;
 
     hits.push({
       url: `https://news.ycombinator.com/item?id=${hit.objectID}`,
@@ -100,6 +150,9 @@ async function searchTavily(
 
   return payload.results
     .filter((result): result is Required<TavilyResult> => Boolean(result.url && result.title))
+    .filter((result) =>
+      isAboutInterviewing(result.content ?? "", result.title, company, options.companyUrl),
+    )
     .map((result) => ({
       url: result.url,
       title: result.title,

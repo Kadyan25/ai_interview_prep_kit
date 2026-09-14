@@ -153,7 +153,7 @@ export async function runPipeline(
   } else {
     await report("search-discussion", "running");
     try {
-      discussion = await deps.research.searchDiscussion(companyLabel);
+      discussion = await deps.research.searchDiscussion(companyLabel, parsed.companyUrl ?? undefined);
       await report(
         "search-discussion",
         "done",
