@@ -32,7 +32,7 @@ export async function runBatch(
         { jd: testCase.jd, companyUrl: testCase.company_url, days: testCase.days },
         deps,
       );
-      kits.push({ id: testCase.id, status: "ok", kit: toCanonicalKit(output.body) });
+      kits.push({ id: testCase.id, status: "ok", kit: toCanonicalKit(output.body), error: null });
       onProgress?.({
         index,
         total: cases.length,
@@ -46,6 +46,7 @@ export async function runBatch(
       kits.push({
         id: testCase.id,
         status: "failed",
+        kit: null,
         error: { code: appError.code, message: appError.message },
       });
       onProgress?.({

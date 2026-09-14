@@ -89,7 +89,23 @@ describe("runBatch", () => {
     expect(output.kits.map((k) => k.id)).toEqual(["case-2", "case-1", "case-2"]);
     expect(output.kits.map((k) => k.status)).toEqual(["failed", "ok", "failed"]);
     expect(output.kits[0]!.error?.code).toBe("INVALID_INPUT");
-    expect(output.kits[0]!.kit).toBeUndefined();
+    expect(output.kits[0]!.kit).toBeNull();
+  });
+
+  it("puts both kit and error on every entry, with the unused one null, as Appendix B does", async () => {
+    const { llm } = stubLlm(handlers);
+    const output = await runBatch([goodCase, badCase], { llm, logger: silentLogger });
+    // Round-trip through JSON: that is what the grader reads, and undefined keys vanish there.
+    const written = JSON.parse(JSON.stringify(output)) as { kits: Record<string, unknown>[] };
+
+    const [ok, failed] = written.kits;
+    expect(Object.keys(ok!).sort()).toEqual(["error", "id", "kit", "status"]);
+    expect(ok!.error).toBeNull();
+    expect(ok!.kit).not.toBeNull();
+
+    expect(Object.keys(failed!).sort()).toEqual(["error", "id", "kit", "status"]);
+    expect(failed!.kit).toBeNull();
+    expect(failed!.error).toMatchObject({ code: "INVALID_INPUT" });
   });
 
   it("reports a failing case rather than throwing", async () => {

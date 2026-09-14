@@ -132,12 +132,14 @@ export type EvaluateCase = {
   days: number;
 };
 
-export type EvaluateResult = {
-  id: string;
-  status: "ok" | "failed";
-  kit?: KitBody;
-  error?: { code: ErrorCode | string; message: string };
-};
+/**
+ * Appendix B shows both `kit` and `error` on every entry, with the unused one set
+ * to null. Both are always present so a strict shape check never trips on a
+ * missing key.
+ */
+export type EvaluateResult =
+  | { id: string; status: "ok"; kit: KitBody; error: null }
+  | { id: string; status: "failed"; kit: null; error: { code: ErrorCode | string; message: string } };
 
 export type EvaluateOutput = {
   version: "1.0";
