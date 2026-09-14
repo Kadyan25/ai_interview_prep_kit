@@ -10,9 +10,11 @@ import { condenseJobDescription } from "./condenseJd.js";
 import { applyEvidenceRules } from "./evidence.js";
 import type { ParsedInput } from "./parseInput.js";
 
-const responseSchema = z.object({
+// `title` and `requirements` have no defaults on purpose: a reply of {} must fail
+// validation and be re-asked, not pass as a posting with no requirements.
+export const extractionResponseSchema = z.object({
   company: z.string().default(""),
-  title: z.string().default(""),
+  title: z.string(),
   seniority: z.string().default("unspecified"),
   location: z.string().default(""),
   responsibilities: z.array(z.string()).default([]),
@@ -25,8 +27,7 @@ const responseSchema = z.object({
         evidence: z.string(),
         cue: z.string().optional(),
       }),
-    )
-    .default([]),
+    ),
 });
 
 export type ExtractedRole = {
@@ -54,7 +55,7 @@ export async function extractRequirements(
     task: "extractRequirements",
     system: extractRequirementsSystem,
     user: extractRequirementsUser(fitted.text),
-    schema: responseSchema,
+    schema: extractionResponseSchema,
     maxOutputTokens: 6144,
   });
 
@@ -70,8 +71,8 @@ export async function extractRequirements(
 
   if (dropped.length > 0) {
     deps.logger.info(
-      { dropped: dropped.map((d) => d.text) },
-      "requirements dropped: evidence not found in the job description",
+      { dropped: dropped.map((d) => ({ text: d.text, reason: d.reason, evidence: d.evidence })) },
+      "requirements dropped: their quote did not support them",
     );
     warnings.add(
       `${dropped.length} suggested requirement${dropped.length === 1 ? "" : "s"} could not be traced back to the posting and ${dropped.length === 1 ? "was" : "were"} dropped.`,

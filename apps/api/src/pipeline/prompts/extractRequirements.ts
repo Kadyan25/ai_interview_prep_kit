@@ -6,7 +6,15 @@ export const extractRequirementsSystem = systemFor(
 
 Rules you must follow:
 - Every requirement carries "evidence": a span copied word for word from the job
-  description. Copy it exactly, do not paraphrase, do not fix typos.
+  description. Copy it exactly, do not paraphrase, do not fix typos. Quote the
+  whole phrase that states the requirement, not a single word like "experience".
+- Keep the posting's own key words in "text" (the tool, skill or domain it names),
+  so the requirement can be matched to its quote.
+- Only report things the candidate needs or would benefit from. Text under
+  benefits, perks, company description or legal notices is not a requirement,
+  and something the posting says is NOT required is not a requirement either.
+- If the posting is not in English, quote it in its own language; write "text"
+  in English.
 - If you cannot quote the job description for something, do not report it.
 - Do not add industry-standard expectations that the posting does not mention.
 - "kind" is "technical" for tools, languages, systems and engineering practice,
