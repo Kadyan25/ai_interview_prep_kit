@@ -44,6 +44,36 @@ export function isSameSite(a: string, b: string): boolean {
   }
 }
 
+function isBareHost(hostname: string): boolean {
+  return net.isIP(hostname.replace(/^\[|\]$/g, "")) !== 0 || !hostname.includes(".");
+}
+
+/** The directory a start URL names: "/acme/" for "/acme", "/acme/" and "/acme/index.html". */
+export function scopePath(startUrl: string): string {
+  const pathname = new URL(startUrl).pathname;
+  if (pathname.endsWith("/")) return pathname;
+  const last = pathname.slice(pathname.lastIndexOf("/") + 1);
+  return last.includes(".") ? pathname.slice(0, pathname.lastIndexOf("/") + 1) : `${pathname}/`;
+}
+
+/**
+ * Whether a link belongs to the company being researched. On a real domain that
+ * is the whole registrable domain. On a bare IP or localhost several companies
+ * can share one host under different paths (localhost:8099/acme/,
+ * localhost:8099/other/), so the crawl also stays below the start path.
+ */
+export function inCrawlScope(url: string, startUrl: string): boolean {
+  if (!isSameSite(url, startUrl)) return false;
+  try {
+    if (!isBareHost(new URL(startUrl).hostname)) return true;
+    const scope = scopePath(startUrl);
+    const pathname = new URL(url).pathname;
+    return pathname.startsWith(scope) || pathname === scope.slice(0, -1);
+  } catch {
+    return false;
+  }
+}
+
 export type CrawlOptions = {
   maxPages: number;
   maxDepth: number;
@@ -98,7 +128,7 @@ export const MAX_PAGES_PER_SECTION = 3;
  */
 export function sectionOf(raw: string, startUrl: string): string | null {
   try {
-    const base = new URL(startUrl).pathname.replace(/[^/]*$/, "");
+    const base = scopePath(startUrl);
     let path = new URL(raw).pathname;
     if (path.startsWith(base)) path = path.slice(base.length);
     const segments = path.split("/").filter(Boolean);
@@ -181,7 +211,7 @@ export async function crawl(startUrl: string, options: CrawlOptions): Promise<Cr
     if (candidate.depth >= options.maxDepth) continue;
 
     for (const { link, score } of rankLinks(extracted.links)) {
-      if (!isSameSite(link.url, startUrl)) continue;
+      if (!inCrawlScope(link.url, startUrl)) continue;
       if (visited.has(pageKey(link.url))) continue;
       frontier.push({ url: link.url, depth: candidate.depth + 1, score });
     }

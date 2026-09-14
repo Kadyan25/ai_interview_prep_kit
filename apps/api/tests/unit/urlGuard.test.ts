@@ -34,6 +34,38 @@ describe("isPrivateAddress", () => {
   });
 });
 
+describe("isPrivateAddress with IPv4 hidden inside IPv6", () => {
+  it("rejects every smuggled private form", () => {
+    for (const address of [
+      "::7f00:1", // IPv4-compatible 127.0.0.1, as URL parsing normalises [::127.0.0.1]
+      "::127.0.0.1",
+      "::ffff:7f00:1",
+      "::ffff:169.254.169.254",
+      "64:ff9b::a9fe:a9fe", // NAT64 of the metadata address
+      "2002:7f00:1::", // 6to4 of 127.0.0.1
+      "fec0::1", // site-local
+      "ff02::1",
+      "0:0:0:0:0:0:0:1",
+      "198.18.0.1",
+      "not:an:address::x",
+    ]) {
+      expect(isPrivateAddress(address), address).toBe(true);
+    }
+  });
+
+  it("still lets public IPv6 and public NAT64 through", () => {
+    expect(isPrivateAddress("2606:4700:4700::1111")).toBe(false);
+    expect(isPrivateAddress("64:ff9b::808:808")).toBe(false);
+    expect(isPrivateAddress("::ffff:8.8.8.8")).toBe(false);
+  });
+
+  it("rejects the bracketed forms in a URL", async () => {
+    for (const url of ["http://[::127.0.0.1]/", "http://[64:ff9b::a9fe:a9fe]/latest/meta-data/"]) {
+      expect((await guardUrl(url, strict)).ok, url).toBe(false);
+    }
+  });
+});
+
 describe("guardUrl", () => {
   it("allows a public host", async () => {
     const result = await guardUrl("https://acme.com/careers", {

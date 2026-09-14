@@ -11,9 +11,20 @@ export type UntrustedSource = `jd` | `page:${string}` | `discussion` | `hiring_p
  * instruction.
  */
 export function untrusted(source: UntrustedSource, text: string, maxChars = MAX_DOCUMENT_CHARS): string {
-  const clipped = text.length > maxChars ? `${text.slice(0, maxChars)}\n…[truncated]` : text;
+  const clipped = neutraliseFence(
+    text.length > maxChars ? `${text.slice(0, maxChars)}\n…[truncated]` : text,
+  );
   const safeSource = source.replace(/[<>"]/g, "");
   return `<untrusted_document source="${safeSource}">\n${clipped}\n</untrusted_document>`;
+}
+
+/**
+ * A posting or page that contains "</untrusted_document>" would otherwise close
+ * the fence early, and whatever follows would read as if it came from us. Any
+ * spelling of the tag, opening or closing, loses its angle bracket.
+ */
+export function neutraliseFence(text: string): string {
+  return text.replace(/<(\s*\/?\s*untrusted_document)/gi, "&lt;$1");
 }
 
 /** Trims the joined blocks to the total context budget, keeping earlier blocks. */

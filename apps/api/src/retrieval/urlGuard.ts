@@ -50,24 +50,70 @@ export function isPrivateAddress(address: string): boolean {
     if (a === 192 && b === 168) return true;
     if (a === 100 && b >= 64 && b <= 127) return true;
     if (a === 192 && b === 0) return true;
+    if (a === 198 && (b === 18 || b === 19)) return true; // benchmarking
     if (a >= 224) return true; // multicast and reserved
     return false;
   }
 
   if (version === 6) {
-    const normalised = address.toLowerCase().replace(/^\[|\]$/g, "");
-    if (normalised === "::" || normalised === "::1") return true;
-    if (normalised.startsWith("fe80") || normalised.startsWith("fc") || normalised.startsWith("fd")) {
-      return true;
-    }
-    if (normalised.startsWith("::ffff:")) {
-      const mapped = normalised.slice("::ffff:".length);
-      return net.isIP(mapped) === 4 ? isPrivateAddress(mapped) : true;
-    }
-    return false;
+    const hextets = expandIpv6(address.replace(/^\[|\]$/g, ""));
+    return hextets ? isPrivateIpv6(hextets) : true;
   }
 
   return true; // not an IP literal at all
+}
+
+/** "::ffff:127.0.0.1" → eight 16-bit groups, or null if it is not valid IPv6. */
+function expandIpv6(address: string): number[] | null {
+  let text = address.toLowerCase();
+  // A trailing dotted IPv4 part stands for the last two groups.
+  const dotted = text.match(/(\d+\.\d+\.\d+\.\d+)$/);
+  if (dotted) {
+    const parts = ipv4ToParts(dotted[1]!);
+    if (!parts) return null;
+    const high = ((parts[0]! << 8) | parts[1]!).toString(16);
+    const low = ((parts[2]! << 8) | parts[3]!).toString(16);
+    text = `${text.slice(0, -dotted[1]!.length)}${high}:${low}`;
+  }
+
+  const halves = text.split("::");
+  if (halves.length > 2) return null;
+  const head = halves[0] ? halves[0].split(":") : [];
+  const tail = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+  const missing = 8 - head.length - tail.length;
+  if (halves.length === 1 ? missing !== 0 : missing < 1) return null;
+
+  const groups = [...head, ...Array<string>(halves.length === 2 ? missing : 0).fill("0"), ...tail];
+  const values = groups.map((g) => (/^[0-9a-f]{1,4}$/.test(g) ? parseInt(g, 16) : Number.NaN));
+  return values.some(Number.isNaN) ? null : values;
+}
+
+function embeddedIpv4(high: number, low: number): string {
+  return [high >> 8, high & 0xff, low >> 8, low & 0xff].join(".");
+}
+
+/**
+ * Loopback, unspecified, unique-local, link-local and site-local ranges, plus
+ * every form that smuggles an IPv4 address inside IPv6 — mapped, compatible,
+ * NAT64 and 6to4 — checked against the IPv4 rules, so [64:ff9b::a9fe:a9fe]
+ * (the cloud metadata address) is caught.
+ */
+function isPrivateIpv6(g: number[]): boolean {
+  const [a, b, c, d, e, f, gg, h] = g as [number, number, number, number, number, number, number, number];
+  const leadingZeros = a === 0 && b === 0 && c === 0 && d === 0 && e === 0;
+  if (leadingZeros && f === 0) {
+    // "::" and "::1" and the deprecated IPv4-compatible form ::a.b.c.d
+    return gg === 0 ? true : isPrivateAddress(embeddedIpv4(gg, h));
+  }
+  if (leadingZeros && f === 0xffff) return isPrivateAddress(embeddedIpv4(gg, h));
+  if (a === 0x64 && b === 0xff9b && c === 0 && d === 0 && e === 0 && f === 0) {
+    return isPrivateAddress(embeddedIpv4(gg, h));
+  }
+  if (a === 0x2002) return isPrivateAddress(embeddedIpv4(b, c));
+  if ((a & 0xfe00) === 0xfc00) return true; // unique local fc00::/7
+  if ((a & 0xffc0) === 0xfe80 || (a & 0xffc0) === 0xfec0) return true; // link-local, site-local
+  if (a >= 0xff00) return true; // multicast
+  return false;
 }
 
 export async function guardUrl(raw: string, options: GuardOptions): Promise<GuardResult> {

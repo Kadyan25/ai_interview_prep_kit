@@ -115,6 +115,15 @@ describe("crawl against a real fixture site", () => {
     expect(keys.filter((k) => k.endsWith("/jobsite/careers"))).toHaveLength(1);
   });
 
+  it("stays below the start path when companies share one host", async () => {
+    for (const start of ["/acme/", "/acme"]) {
+      const result = await crawlSite(start);
+      const paths = result.pages.map((p) => new URL(p.url).pathname);
+      expect(paths.length).toBeGreaterThan(1);
+      expect(paths.every((p) => p.startsWith("/acme")), `${start}: ${paths.join(", ")}`).toBe(true);
+    }
+  });
+
   it("returns unreachable rather than throwing for a dead host", async () => {
     const options = fetchOptions();
     const result = await crawl("http://127.0.0.1:1/", {

@@ -14,7 +14,7 @@ export type FetchOk = {
   html: string;
 };
 
-export type FetchFail = { ok: false; url: string; reason: string };
+export type FetchFail = { ok: false; url: string; reason: string; status?: number };
 export type FetchResult = FetchOk | FetchFail;
 
 export type FetchOptions = {
@@ -22,32 +22,54 @@ export type FetchOptions = {
   guard: GuardOptions;
   fetchImpl?: typeof fetch;
   sleep?: (ms: number) => Promise<void>;
+  /** For robots.txt, which servers label with any type they like. */
+  anyContentType?: boolean;
 };
 
 const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/** Reads at most MAX_BYTES so a huge or endless body cannot exhaust memory. */
-async function readCapped(response: Response): Promise<string | null> {
+type BodyResult = { ok: true; text: string } | { ok: false; reason: string };
+
+/**
+ * Reads at most MAX_BYTES, and gives up at the deadline. The request timeout
+ * only covers waiting for headers; a server that sends headers and then one byte
+ * a second would otherwise hold the single generation queue forever.
+ */
+async function readCapped(response: Response, timeoutMs: number): Promise<BodyResult> {
   const body = response.body;
-  if (!body) return await response.text();
+  if (!body) return { ok: true, text: await response.text() };
 
   const reader = body.getReader();
   const chunks: Uint8Array[] = [];
   let total = 0;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<"timeout">((resolve) => {
+    timer = setTimeout(() => resolve("timeout"), timeoutMs);
+  });
 
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    if (!value) continue;
-    total += value.byteLength;
-    if (total > MAX_BYTES) {
-      await reader.cancel();
-      return null;
+  try {
+    for (;;) {
+      const next = await Promise.race([reader.read(), deadline]);
+      if (next === "timeout") {
+        void reader.cancel().catch(() => undefined);
+        return { ok: false, reason: `page body did not finish within ${timeoutMs}ms` };
+      }
+      if (next.done) break;
+      if (!next.value) continue;
+      total += next.value.byteLength;
+      if (total > MAX_BYTES) {
+        void reader.cancel().catch(() => undefined);
+        return { ok: false, reason: "page is larger than 2MB" };
+      }
+      chunks.push(next.value);
     }
-    chunks.push(value);
+  } catch (error) {
+    return { ok: false, reason: `network error: ${error instanceof Error ? error.message : String(error)}` };
+  } finally {
+    clearTimeout(timer);
   }
 
-  return Buffer.concat(chunks.map((c) => Buffer.from(c))).toString("utf8");
+  return { ok: true, text: Buffer.concat(chunks.map((c) => Buffer.from(c))).toString("utf8") };
 }
 
 /**
@@ -67,6 +89,7 @@ export async function fetchPage(rawUrl: string, options: FetchOptions): Promise<
     if (!guarded.ok) return { ok: false, url: currentUrl, reason: guarded.reason };
 
     let lastReason = "request failed";
+    let lastStatus: number | undefined;
     let response: Response | null = null;
 
     for (let attempt = 0; attempt < RETRYABLE_ATTEMPTS; attempt += 1) {
@@ -94,6 +117,7 @@ export async function fetchPage(rawUrl: string, options: FetchOptions): Promise<
 
       if (response && response.status >= 500) {
         lastReason = `server returned ${response.status}`;
+        lastStatus = response.status;
         response = null;
       }
 
@@ -101,7 +125,9 @@ export async function fetchPage(rawUrl: string, options: FetchOptions): Promise<
       if (attempt < RETRYABLE_ATTEMPTS - 1) await sleep(500 * 2 ** attempt);
     }
 
-    if (!response) return { ok: false, url: currentUrl, reason: lastReason };
+    if (!response) {
+      return { ok: false, url: currentUrl, reason: lastReason, ...(lastStatus ? { status: lastStatus } : {}) };
+    }
 
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
@@ -111,11 +137,13 @@ export async function fetchPage(rawUrl: string, options: FetchOptions): Promise<
     }
 
     if (response.status >= 400) {
-      return { ok: false, url: currentUrl, reason: `server returned ${response.status}` };
+      return { ok: false, url: currentUrl, reason: `server returned ${response.status}`, status: response.status };
     }
 
     const contentType = (response.headers.get("content-type") ?? "").toLowerCase();
-    if (!ALLOWED_TYPES.some((type) => contentType.includes(type))) {
+    // Compare the media type itself: "application/json; profile=text/html" is JSON.
+    const mediaType = contentType.split(";")[0]!.trim();
+    if (!options.anyContentType && !ALLOWED_TYPES.includes(mediaType)) {
       return {
         ok: false,
         url: currentUrl,
@@ -128,15 +156,15 @@ export async function fetchPage(rawUrl: string, options: FetchOptions): Promise<
       return { ok: false, url: currentUrl, reason: "page is larger than 2MB" };
     }
 
-    const html = await readCapped(response).catch(() => null);
-    if (html === null) return { ok: false, url: currentUrl, reason: "page is larger than 2MB" };
+    const body = await readCapped(response, options.timeoutMs);
+    if (!body.ok) return { ok: false, url: currentUrl, reason: body.reason };
 
     return {
       ok: true,
       url: guarded.url.toString(),
       status: response.status,
       contentType,
-      html,
+      html: body.text,
     };
   }
 

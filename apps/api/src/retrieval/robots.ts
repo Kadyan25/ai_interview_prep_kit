@@ -1,10 +1,14 @@
 import robotsParser, { type Robot } from "robots-parser";
 import { USER_AGENT, fetchPage, type FetchOptions } from "./fetchPage.js";
 
+// RFC 9309: a robots.txt that errors on the server side means assume nothing is allowed.
+const DISALLOW_ALL = "User-agent: *\nDisallow: /\n";
+
 /**
  * One robots.txt per origin, fetched once and cached for the life of the process.
- * A site that does not publish one, or whose robots.txt cannot be read, is
- * treated as allowing the crawl — that is what the standard says.
+ * Following RFC 9309: a missing robots.txt (4xx) allows the crawl, a server
+ * error (5xx) disallows it, and the file is read whatever content type it is
+ * served with.
  */
 export class RobotsCache {
   private readonly cache = new Map<string, Robot | null>();
@@ -16,8 +20,12 @@ export class RobotsCache {
     if (cached !== undefined) return cached;
 
     const robotsUrl = `${origin}/robots.txt`;
-    const result = await fetchPage(robotsUrl, this.options);
-    const robot = result.ok ? robotsParser(robotsUrl, result.html) : null;
+    const result = await fetchPage(robotsUrl, { ...this.options, anyContentType: true });
+    const robot = result.ok
+      ? robotsParser(robotsUrl, result.html)
+      : result.status !== undefined && result.status >= 500
+        ? robotsParser(robotsUrl, DISALLOW_ALL)
+        : null;
     this.cache.set(origin, robot);
     return robot;
   }
