@@ -22,8 +22,9 @@ function retryAfterMsOf(error: unknown): number | undefined {
   return match ? Math.ceil(Number(match[1]) * 1000) : undefined;
 }
 
-export function createGeminiProvider(apiKey: string, model: string): LlmProvider {
-  const client = new GoogleGenAI({ apiKey });
+export function createGeminiProvider(apiKey: string, model: string, timeoutMs: number): LlmProvider {
+  // Without a timeout a hung request never returns and the batch misses its deadline.
+  const client = new GoogleGenAI({ apiKey, httpOptions: { timeout: timeoutMs } });
 
   return {
     name: "gemini",

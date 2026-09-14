@@ -16,8 +16,10 @@ function retryAfterMsOf(error: unknown): number | undefined {
   return Number.isFinite(seconds) ? Math.ceil(seconds * 1000) : undefined;
 }
 
-export function createGroqProvider(apiKey: string, model: string): LlmProvider {
-  const client = new Groq({ apiKey });
+export function createGroqProvider(apiKey: string, model: string, timeoutMs: number): LlmProvider {
+  // Our client already retries and fails over, so the SDK's own retries would
+  // only multiply the wait on a hung call.
+  const client = new Groq({ apiKey, timeout: timeoutMs, maxRetries: 0 });
 
   return {
     name: "groq",

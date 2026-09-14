@@ -20,9 +20,11 @@ export function createLlmFromEnv(): LlmClient {
   const env = coreEnv();
 
   const gemini = env.GEMINI_API_KEY
-    ? createGeminiProvider(env.GEMINI_API_KEY, env.GEMINI_MODEL)
+    ? createGeminiProvider(env.GEMINI_API_KEY, env.GEMINI_MODEL, env.LLM_TIMEOUT_MS)
     : null;
-  const groq = env.GROQ_API_KEY ? createGroqProvider(env.GROQ_API_KEY, env.GROQ_MODEL) : null;
+  const groq = env.GROQ_API_KEY
+    ? createGroqProvider(env.GROQ_API_KEY, env.GROQ_MODEL, env.LLM_TIMEOUT_MS)
+    : null;
 
   const ordered = env.LLM_PRIMARY === "gemini" ? [gemini, groq] : [groq, gemini];
   const providers = ordered.filter((p): p is LlmProvider => p !== null);

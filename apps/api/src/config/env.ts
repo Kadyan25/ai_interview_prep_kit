@@ -39,6 +39,7 @@ const coreSchema = z.object({
     TAVILY_API_KEY: optionalString,
     TAVILY_MAX_SEARCHES: intFromEnv(100),
     LLM_CONCURRENCY: intFromEnv(2),
+    LLM_TIMEOUT_MS: intFromEnv(60_000),
     CRAWL_MAX_PAGES: intFromEnv(12),
     FETCH_TIMEOUT_MS: intFromEnv(10_000),
   ALLOW_PRIVATE_URLS: z
