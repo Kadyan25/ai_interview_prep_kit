@@ -15,7 +15,7 @@ be regenerated without losing the edits you made elsewhere.
 
 ## Contents
 
-- [Running it](#running-it)
+- [Running it](#running-it) (and [deploying](#deploying))
 - [The batch runner](#the-batch-runner)
 - [Architecture](#architecture)
 - [How generation works](#how-generation-works)
@@ -68,6 +68,28 @@ app, `MONGODB_URI` and `JWT_SECRET`.
   `/people/how-we-hire.html`, nowhere near a `/careers` path, with a `robots.txt` that disallows
   part of the site
 - `http://localhost:8099/nohire/` — a company that publishes nothing about how it hires
+- `http://localhost:8099/jobsite/` — a careers page linking six job ads and one how-we-hire page,
+  the same page linked under several spellings
+
+### Deploying
+
+Three free services: MongoDB Atlas (M0), Render for the API, Vercel for the web app. The API is a
+long-lived Express process because generation runs in-process for a minute or more, which a
+serverless function would cut off.
+
+1. **Atlas.** Create an M0 cluster and a database user. Under Network Access allow `0.0.0.0/0`,
+   because Render's free instances have no fixed outbound IP. Copy the connection string.
+2. **Render.** New → Blueprint, pointing at this repo; `render.yaml` defines the service, its build
+   and start commands, and a `/health` check. Set the secrets it leaves blank: `MONGODB_URI`,
+   `JWT_SECRET` (32+ random characters), `GROQ_API_KEY`, `GEMINI_API_KEY`, `TAVILY_API_KEY`, and
+   `WEB_ORIGIN` (the Vercel URL, once you have it).
+3. **Vercel.** Import the repo; `vercel.json` sets the workspace build. Set `API_URL` to the Render
+   URL. The browser only ever calls its own origin and Next rewrites `/api/*` to the API, so the
+   session cookie stays first-party and no CORS setup is needed.
+
+In production the SSRF guard blocks private and loopback addresses, and the session cookie is
+`Secure`. A free Render instance sleeps when idle, so the first request after a quiet spell takes a
+few seconds while it wakes; the UI says so rather than showing a generic error.
 
 ---
 
@@ -178,17 +200,28 @@ in code rather than asked for in a prompt.
 
 The model must return a **verbatim quote** from the posting for every requirement it reports. Then:
 
-1. The quote is normalised and checked as a substring of the posting. **Not found, requirement
-   dropped**, and a warning says how many were dropped.
-2. Priority is re-derived from the posting's own wording. A cue word — *required*, *must*, *bonus*,
-   *nice to have* — decides, and the model's own answer is overridden.
+1. The quote is normalised and checked as a substring of the **full** posting. **Not found,
+   requirement dropped**, and a warning says how many were dropped. The match tolerates re-typed
+   dashes and spacing (models turn an em dash into " - ") but every letter and digit must agree.
+2. Priority is re-derived from the posting's own wording, and the model's own answer is overridden.
 3. Duplicates are collapsed.
 
-The cue has to sit in the **same line or bullet** as the quote. An early version searched a 200
-character window, which in a normal bullet list spans two or three neighbouring bullets, so
-"Experience with the payments domain is nice to have" quietly downgraded the *next* bullet. If the
-bullet has no cue, the code looks back up to six lines for a section heading like `Nice to have:`.
-Otherwise the model's answer stands.
+Priority cues are looked for in order of how directly they apply, and nothing further away is read:
+
+| Order | Where | Example |
+|---|---|---|
+| 1 | The quote's own clause | "5+ years of Go is **required**; TypeScript is **a plus**" — each half gets its own |
+| 2 | A short label before a dash | "**Required** — five years of Go in production" |
+| 3 | The nearest section heading above | "**What you'll bring**", "**Nice to have**", "**Preferred qualifications**" — with or without a colon, up to 40 lines up |
+
+Clauses split at dashes, semicolons and sentence ends, so "Deep expertise in Quote-to-Cash systems —
+hands-on experience strongly *preferred*" stays a must: the "preferred" belongs to the second clause.
+The heading walk stops at the first heading of any kind, so a line under "Benefits" never inherits
+the "Requirements" heading further up. With no cue in range the model's answer stands.
+
+Postings are sent to the model whole up to 16,000 characters. Beyond that, benefits and legal
+sections go first and requirement sections are never cut. An earlier 6,000 character cap cut a real
+GitLab posting mid-requirements and produced 2 requirements out of 8; it now produces all 8.
 
 This works on real output. In a live run the model proposed "Experience with Node.js" against a
 52-word posting that never said it; it was dropped. In another, it marked payments-domain experience
@@ -247,12 +280,29 @@ earliest day fills first.
   because with a 12-page budget the visit order decides whether the hiring page is found at all. A
   fixed list of paths would not work; the fixture site deliberately hides its hiring page at
   `/people/how-we-hire.html` and the crawler finds it.
+- **The budget goes on pages that say something new.** Individual job ads (a path below `/careers`
+  or `/jobs` with no process words) rank below "about" pages and at most two are read, since they
+  repeat the posting the user pasted. At most three pages come from any one section, such as
+  `/customers` or `/blog`. One page is fetched once however it is linked: query strings, fragments,
+  trailing slashes, `index.html`, locale prefixes such as `/es/` and redirects all collapse to one
+  key. On hex.tech this took customer case studies from 8 of 12 pages to 3.
 - **`robots.txt`** is fetched once per origin and respected. Disallowed URLs are skipped and recorded
   in `research.skipped` rather than silently dropped.
-- **Hacker News**, via the Algolia API, needs no key. Hits are filtered to ones that actually mention
-  the company.
-- **Tavily**, only if `TAVILY_API_KEY` is set. Without it the kit says no public discussion was
-  found rather than pretending otherwise.
+- **Hacker News**, via the Algolia API, needs no key.
+- **Tavily**, if `TAVILY_API_KEY` is set. This is how candidate reports on sites such as Glassdoor
+  reach the kit: their `robots.txt` disallows crawlers, so they are never scraped, only read through a
+  search API's results. Each search costs a credit, so results are cached for a week (on disk
+  locally, in memory when deployed) and `TAVILY_MAX_SEARCHES` caps paid calls per process.
+
+Discussion results are only kept if they are about interviewing at *this* company: the name as a
+whole word (case-sensitive for names of four letters or fewer, so "Hex" does not match hex colour
+codes) or the company's domain, within 160 characters of a candidate phrase such as *interview
+process*, *interviewed at*, *take-home* or *recruiter*. Monthly "Who is hiring" threads are
+excluded. A bare "interview" is not enough — it matched press interviews with founders.
+
+When the company publishes no hiring process but candidates describe one, `how_they_hire` uses
+their reports and says so: *"Their site does not describe the process. Unverified candidate
+reports: …"*. A company's own page is stated as fact; a forum post is not.
 
 `kit.source.pages_used` and `company_brief.sources` are written by the code from what was actually
 fetched, never by the model, so the source list cannot be embellished.
@@ -279,6 +329,11 @@ Every item carries an origin:
 
 `pinned` is independent and always survives. Touching an item is the only thing that marks it
 `edited`, which is what makes regeneration tractable.
+
+Questions are reordered by drag or keyboard within a category, and moved to another category from a
+picker on each card. The picker disables categories a question cannot legally join: only
+company-fit questions may stand without a requirement, so a question with none can move there and
+nowhere else.
 
 **Regenerating one category** replaces only the generated, unpinned questions in that category. It
 then re-runs the coverage check in code, and writes back with a targeted update on just the paths it
@@ -344,23 +399,33 @@ Confidence ordering is predictable, explainable and correct for a deadline.
 
 ## Edge cases
 
+The rule behind all of them: **a kit that is honest about what it could not find beats a kit that
+fills the gap.** In a batch, `failed` is used only when no kit could be produced at all — the one
+such case is an empty posting. Everything below still produces an `ok` kit, with the gap written into
+`kit.warnings` and shown in the UI.
+
+### The eight cases from the brief
+
 | Case | What happens |
 |---|---|
-| Thin posting | Few requirements, and a warning saying how many words it was. The kit is short on purpose and says so. |
-| Nothing quotable in the posting | Zero requirements rather than invented ones; the kit falls back to general ground for the role title and says so. |
-| Company site unreachable | Crawl returns nothing, brief is built from the posting alone and states that, kit is `partial`. Still `ok` in a batch — a kit was produced. |
-| No hiring page | `how_they_hire` says plainly that no public description was found. Recorded as a skipped step, not a failure. |
-| Hiring page found but not actually about hiring | The summariser returns nothing and the kit reports no hiring page, rather than summarising a careers-values page as a process. |
-| No public discussion | A warning naming the company, so nothing in the kit is second-hand. |
-| `robots.txt` disallows a path | Skipped and recorded in `research.skipped`. |
+| **Company URL invalid, 404, or timing out** | An address that is not a URL, or not http(s), is recorded as a warning (*"…is not a valid web address, so the company was not researched"*) and the crawl step is skipped with that reason. A 404 or timeout is a skipped page with its reason in `research.skipped`; if no page could be read the brief is built from the posting alone and says so. `source.company_url` keeps what was supplied. The kit is `partial`. |
+| **No discoverable hiring or about page** | `how_they_hire` says plainly that no public description of the process was found, unless candidates describe one in public discussion, in which case it is labelled as unverified candidate reports. The step shows as skipped, not failed. A careers page that talks about values rather than a process is summarised as nothing, not dressed up as a process. |
+| **Two-line stub posting** | A warning gives the word count and says the list is short by design. Only requirements with a verbatim quote survive, and questions are generated only for categories that have requirements to hang them on, so a thin posting produces a thin kit. A posting with nothing quotable has zero requirements, not made-up ones. |
+| **Public discussion finds nothing** | A warning naming the company says nothing in the kit is second-hand. Irrelevant matches (hex editors for "Hex", hiring threads, press interviews) are filtered out rather than counted as discussion. |
+| **Model returns invalid JSON or an incomplete kit** | Repaired first (code fences, trailing commas, truncated output). If it still fails the schema, the model is re-asked once with the exact validation errors. An invented requirement id is stripped before coverage is measured; a question left pointing at nothing is dropped at assembly. The assembled kit is validated against the Appendix A schema before it is saved or written. |
+| **Provider rate-limits or briefly fails** | Every call goes through one client with a concurrency limit and spacing between requests. Transient errors get backoff that honours `Retry-After` (a daily-quota 429 saying "retry in 0s" is ignored in favour of real backoff); permanent ones (404, 401) move to the other provider at once. If one question category still fails, that category is empty with a warning and the rest of the kit is unaffected. |
+| **Same description and company submitted twice** | Posting, company and day count hash to the same value for the same user. The second submission returns the existing kit, including one still generating, and offers to open it or generate a fresh one, so no second job starts unless asked. |
+| **A 1-day or 60-day schedule** | Allocation is code, and it asserts the day count exactly. One day puts everything on that day, hardest must-haves first, with no review day. Sixty days front-load the material and turn the surplus into review days that cycle through earlier days, so the plan does not drill the same two questions for fifty days. Tested for every day count from 1 to 60. |
+
+### Others that came up
+
+| Case | What happens |
+|---|---|
 | A must-have nothing covers | Listed in `coverage.uncovered_requirement_ids`, in `warnings`, and flagged on the requirement in the UI. Kit is `partial`. |
-| Model returns malformed JSON | Repaired (fences, trailing commas, truncation), then re-asked once with the exact validation errors, then `LLM_INVALID_OUTPUT`. |
-| Model invents a requirement id | Stripped before the coverage check so it cannot read as coverage; a question left with nothing to point at is dropped at assembly. |
-| Model provider down or retired | Retries with backoff, then the other provider. A daily-quota 429 that says "retry in 0s" is ignored in favour of real backoff. |
-| One question category fails | That category is empty and a warning says so. The other three, and the kit, are unaffected. |
-| `days = 1` | Everything on one day, no review day. |
-| `days` far exceeds the material | Surplus days become review days that cycle through earlier days. |
-| Duplicate submission | Deduplicated by content hash; the existing kit is offered. |
+| Posting longer than the model's context | Sent whole up to 16,000 characters; beyond that benefits and legal text go first, requirement sections never. |
+| `robots.txt` disallows a path | Skipped and recorded in `research.skipped`. |
+| Site renders client-side | Pages with almost no readable text are skipped with that reason; the brief is thin and labelled. |
+| Session expires mid-use | The next API call that gets a 401 clears the cookie and returns to sign-in with a notice, then back to the page you were on. |
 | Company site on localhost | Supported. The SSRF guard is on in production and off in development, which is what lets the batch runner reach a local fixture site. |
 
 ---
@@ -409,7 +474,7 @@ the reasoning budget goes on justifying a substitution.
 npm test
 ```
 
-170 tests, none of which touch the network or a real model.
+231 tests, none of which touch the network or a real model.
 
 | Area | What it pins down |
 |---|---|
@@ -417,22 +482,29 @@ npm test
 | Edit operations | Every operation, origin transitions, ids never reused, deleting a question prunes the plan, a bad batch is rejected whole |
 | Schedule | Exact day counts from 1 to 60, every question allocated once, whole-number minutes, hardest first, review days, empty deck |
 | Coverage | Gap detection, must versus nice, invented ids stripped before counting |
-| Evidence | Substring matching, cue overrides, cues not leaking across bullets, heading fallback |
+| Evidence | Substring matching, re-typed dashes, cue overrides, cues scoped to their clause, headings without colons, a heading 12 bullets up, sections that stop the walk |
+| Long postings | Sent whole when they fit, benefits cut before requirements, requirement sections never cut, a hard ceiling |
+| Discussion | Short names match case, whole words only, hiring threads and press interviews rejected, domain counts as a mention; Tavily searched once per company, cache survives restarts and expires, budget stops paid calls, failures not cached |
 | Model client | Backoff, `Retry-After` including the zero case, failover on both permanent and transient failures, JSON repair, one corrective re-ask |
 | URL guard | Every private range, schemes, credentials, localhost allowed only when configured |
-| Link ranking | Score order, tie-breaks, assets excluded, relative links resolved |
-| Crawler | Against a real HTTP server on an ephemeral port: finds the buried hiring page, obeys robots, respects depth and page budgets, survives a dead host |
-| Pipeline | Full run with a stub model: contract satisfied, unquotable requirement dropped, priority corrected, per-category calls, coverage loop, thin posting, repair path |
+| Link ranking | Score order, tie-breaks, assets excluded, job ads recognised, one key per page across spellings and translations, words in adjacent elements kept apart |
+| Crawler | Against a real HTTP server on an ephemeral port: finds the buried hiring page, obeys robots, respects depth and page budgets, reads the process page before job ads and only two ads, fetches a page once however it is linked, survives a dead host |
+| Pipeline | Full run with a stub model: contract satisfied, unquotable requirement dropped, priority corrected, per-category calls, coverage loop, thin posting, repair path, invalid company URL still builds a kit, a requirement after character 6,000 still reaches the model |
 | Regeneration | Edited, manual and pinned survive; generated replaced; other sections untouched; coverage recomputed; hand-edited plan left alone |
-| Batch runner | Appendix B envelope, one entry per case, keeps going after a failure |
+| Batch runner | Appendix B envelope with both `kit` and `error` on every entry, one entry per case, keeps going after a failure |
 | Practice | Ordering rules, and that it does not mutate its input |
 
 ---
 
 ## Known limitations
 
-- **Discussion search leans on Hacker News.** Good for technology companies, thin for everyone else.
-  Tavily widens it, but that needs a key. When nothing is found the kit says so rather than padding.
+- **Discussion search without a Tavily key is Hacker News only.** Good for technology companies,
+  thin for everyone else. When nothing is found the kit says so rather than padding. The relevance
+  filter is deliberately strict, so it will sometimes drop a real report that is phrased unusually.
+- **Candidate reports are not dated or weighed.** A three-year-old post counts as much as last
+  month's, which is why they are labelled unverified.
+- **Pages that differ only by query string are treated as one.** Right for tracking parameters,
+  wrong for the rare site that serves distinct pages as `?id=`.
 - **One job at a time per process.** Right for one user on a free tier, wrong for many. The seam is
   there: swapping the in-process queue for a real one means replacing one module.
 - **A cold API takes a few seconds to answer.** Free hosting sleeps idle services; the first request
