@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { ItemStateMap, KitBody, QuestionCategory } from "@prep/shared";
 import { validateKitBody } from "@prep/shared";
-import { regenerateCategory, regenerateSchedule } from "../../src/services/regenerate.js";
+import { assertRegenerable, regenerateCategory, regenerateSchedule } from "../../src/services/regenerate.js";
 import type { KitDoc } from "../../src/models/Kit.js";
 import { silentLogger, stubLlm } from "../helpers/stubLlm.js";
 
 /**
- * The regeneration functions take a kit document and return the `$set` payload.
+ * A regeneration plans from a snapshot and commits against the kit as it is then.
  * That keeps them testable without a database — only the write itself is Mongo's
  * job, and these tests are about what gets written.
  */
@@ -116,17 +116,32 @@ const freshTechnical = {
 
 const noop = async () => undefined;
 
+/** Runs a category regeneration and commits it against `current` (the snapshot by default). */
+async function regen(
+  category: QuestionCategory,
+  handlers: Record<string, unknown>,
+  snapshot: KitDoc = kitDoc(),
+  current: KitDoc = snapshot,
+) {
+  const { llm, calls } = stubLlm(handlers);
+  const plan = await regenerateCategory(snapshot, category, { llm, logger: silentLogger }, noop);
+  const result = plan.commit(current);
+  return { ...result, next: written(current, result.set), calls };
+}
+
+/** The kit body after a `$set` with dotted paths, as Mongo would store it. */
+function written(current: KitDoc, set: Record<string, unknown>): KitBody {
+  const next = structuredClone(current.body) as KitBody;
+  if (set["body.questions"]) next.questions = set["body.questions"] as KitBody["questions"];
+  if (set["body.coverage"]) next.coverage = set["body.coverage"] as KitBody["coverage"];
+  if (set["body.schedule"]) next.schedule = set["body.schedule"] as KitBody["schedule"];
+  if (set["body.company_brief"]) next.company_brief = set["body.company_brief"] as KitBody["company_brief"];
+  return next;
+}
+
 describe("regenerateCategory", () => {
   it("keeps edited, manual and pinned questions and replaces the rest", async () => {
-    const { llm } = stubLlm(freshTechnical);
-    const result = await regenerateCategory(
-      kitDoc(),
-      "technical",
-      { llm, logger: silentLogger },
-      noop,
-    );
-
-    const next = result.set.body as KitBody;
+    const { next } = await regen("technical", freshTechnical);
     const prompts = next.questions.map((question) => question.prompt);
 
     expect(prompts).toContain("The one the user rewrote");
@@ -136,47 +151,28 @@ describe("regenerateCategory", () => {
     expect(prompts).toContain("A brand new technical question");
   });
 
-  it("leaves every other category untouched", async () => {
-    const { llm } = stubLlm(freshTechnical);
-    const result = await regenerateCategory(
-      kitDoc(),
-      "technical",
-      { llm, logger: silentLogger },
-      noop,
-    );
+  it("writes only the question, coverage and schedule paths, never the whole body", async () => {
+    const { set } = await regen("technical", freshTechnical);
+    expect(Object.keys(set).sort()).toEqual(["body.coverage", "body.questions", "body.schedule", "counters", "itemState"]);
+  });
 
-    const next = result.set.body as KitBody;
+  it("leaves every other category untouched", async () => {
+    const { next } = await regen("technical", freshTechnical);
     const behavioural = next.questions.filter((question) => question.category === "behavioural");
     expect(behavioural.map((question) => question.id)).toEqual(["q5"]);
     expect(behavioural[0]!.prompt).toBe("A behavioural question");
   });
 
   it("gives new questions unused ids and advances the counter", async () => {
-    const { llm } = stubLlm(freshTechnical);
-    const result = await regenerateCategory(
-      kitDoc(),
-      "technical",
-      { llm, logger: silentLogger },
-      noop,
-    );
-
-    const next = result.set.body as KitBody;
-    const counters = result.set.counters as { q: number };
+    const { next, set } = await regen("technical", freshTechnical);
     expect(next.questions.map((question) => question.id)).toContain("q6");
     expect(next.questions.map((question) => question.id)).toContain("q7");
-    expect(counters.q).toBe(7);
+    expect((set.counters as { q: number }).q).toBe(7);
   });
 
   it("drops the replaced questions from the item state", async () => {
-    const { llm } = stubLlm(freshTechnical);
-    const result = await regenerateCategory(
-      kitDoc(),
-      "technical",
-      { llm, logger: silentLogger },
-      noop,
-    );
-
-    const state = result.set.itemState as ItemStateMap;
+    const { set } = await regen("technical", freshTechnical);
+    const state = set.itemState as ItemStateMap;
     expect(state.q1).toBeUndefined();
     expect(state.q2).toBeUndefined();
     expect(state.q3).toEqual({ origin: "edited", pinned: false });
@@ -184,121 +180,120 @@ describe("regenerateCategory", () => {
     expect(state.q6).toEqual({ origin: "generated", pinned: false });
   });
 
-  it("removes replaced questions from the schedule", async () => {
-    const { llm } = stubLlm(freshTechnical);
-    const result = await regenerateCategory(
-      kitDoc(),
-      "technical",
-      { llm, logger: silentLogger },
-      noop,
-    );
+  it("puts new questions in the replaced questions' places, keeping the user's order", async () => {
+    const reordered = kitDoc();
+    const [a, b, c, d, e] = reordered.body!.questions;
+    reordered.body!.questions = [c!, a!, d!, b!, e!]; // q3, q1, q4, q2, q5
+    const { next } = await regen("technical", freshTechnical, reordered);
+    expect(next.questions.map((question) => question.id)).toEqual(["q3", "q6", "q4", "q7", "q5"]);
+  });
 
-    const next = result.set.body as KitBody;
+  it("removes replaced questions from the schedule", async () => {
+    const { next } = await regen("technical", freshTechnical);
     const scheduled = next.schedule.days.flatMap((day) => day.question_ids);
     expect(scheduled).not.toContain("q1");
     expect(scheduled).not.toContain("q2");
   });
 
   it("re-plans the schedule when the user has not edited it", async () => {
-    const { llm } = stubLlm(freshTechnical);
-    const result = await regenerateCategory(
-      kitDoc(),
-      "technical",
-      { llm, logger: silentLogger },
-      noop,
-    );
-
-    const next = result.set.body as KitBody;
+    const { next, scheduleStale } = await regen("technical", freshTechnical);
     const scheduled = new Set(next.schedule.days.flatMap((day) => day.question_ids));
     for (const question of next.questions) {
       expect(scheduled.has(question.id), `${question.id} should be scheduled`).toBe(true);
     }
-    expect(result.scheduleStale).toBeUndefined();
+    expect(scheduleStale).toBeUndefined();
   });
 
-  it("leaves a hand-edited schedule alone and flags it as stale", async () => {
-    const { llm } = stubLlm(freshTechnical);
-    const result = await regenerateCategory(
-      kitDoc({ itemState: itemState({ schedule: { origin: "edited", pinned: false } }) }),
-      "technical",
-      { llm, logger: silentLogger },
-      noop,
-    );
-
-    const next = result.set.body as KitBody;
-    expect(result.scheduleStale).toBe(true);
-    // Day 2 keeps the user's own ordering, minus the questions that are gone.
-    expect(next.schedule.days[1]!.question_ids).toEqual(["q3", "q4", "q5"]);
+  it("leaves a hand-edited or pinned schedule alone and flags it as stale", async () => {
+    for (const schedule of [
+      { origin: "edited" as const, pinned: false },
+      { origin: "generated" as const, pinned: true },
+    ]) {
+      const { next, scheduleStale } = await regen("technical", freshTechnical, kitDoc({ itemState: itemState({ schedule }) }));
+      expect(scheduleStale).toBe(true);
+      // Day 2 keeps the user's own ordering, minus the questions that are gone.
+      expect(next.schedule.days[1]!.question_ids).toEqual(["q3", "q4", "q5"]);
+    }
   });
 
-  it("recomputes coverage in code and counts the pass", async () => {
-    const { llm } = stubLlm({
-      "generateQuestions:behavioural": { questions: [] },
-    });
-    const result = await regenerateCategory(
-      kitDoc(),
-      "behavioural",
-      { llm, logger: silentLogger },
-      noop,
-    );
-
-    const next = result.set.body as KitBody;
-    // q5 was the only behavioural question and nothing replaced it, so r2 is bare.
-    expect(next.coverage.uncovered_requirement_ids).toEqual(["r2"]);
-    expect(next.coverage.passes).toBe(2);
+  it("covers a must-have the new questions leave bare, without counting a generation pass", async () => {
+    const { next, calls } = await regen("behavioural", { "generateQuestions:behavioural": { questions: [] } });
+    // q5 was the only behavioural question and nothing replaced it: a gap call is
+    // made, and when that yields nothing code writes a question so r2 is covered.
+    expect(calls.map((call) => call.task)).toContain("generateForGaps:behavioural");
+    expect(next.coverage.uncovered_requirement_ids).toEqual([]);
+    expect(next.questions.some((question) => question.requirement_ids.includes("r2"))).toBe(true);
+    expect(next.coverage.passes).toBe(1);
   });
 
   it("always returns a kit that still validates", async () => {
-    const { llm } = stubLlm(freshTechnical);
-    const result = await regenerateCategory(
-      kitDoc(),
-      "technical",
-      { llm, logger: silentLogger },
-      noop,
-    );
-    expect(validateKitBody(result.set.body).ok).toBe(true);
+    const { next } = await regen("technical", freshTechnical);
+    expect(validateKitBody(next).ok).toBe(true);
   });
 
   it("ignores a generated question that cites a requirement which does not exist", async () => {
-    const { llm } = stubLlm({
+    const { next } = await regen("technical", {
       "generateQuestions:technical": {
-        questions: [
-          {
-            requirement_ids: ["r99"],
-            prompt: "Cites nothing real",
-            answer_outline: "Outline",
-            difficulty: 2,
-          },
-        ],
+        questions: [{ requirement_ids: ["r99"], prompt: "Cites nothing real", answer_outline: "Outline", difficulty: 2 }],
       },
     });
-
-    const result = await regenerateCategory(
-      kitDoc(),
-      "technical",
-      { llm, logger: silentLogger },
-      noop,
-    );
-
-    const next = result.set.body as KitBody;
     expect(next.questions.map((question) => question.prompt)).not.toContain("Cites nothing real");
     expect(validateKitBody(next).ok).toBe(true);
   });
 });
 
+describe("edits made while a regeneration runs", () => {
+  it("keeps a question the user edited after the job started", async () => {
+    const snapshot = kitDoc();
+    const current = kitDoc();
+    current.body!.questions[0] = { ...current.body!.questions[0]!, prompt: "Edited mid-regeneration" };
+    current.itemState = itemState({ q1: { origin: "edited", pinned: false } });
+
+    const { next, set } = await regen("technical", freshTechnical, snapshot, current);
+    expect(next.questions.map((question) => question.prompt)).toContain("Edited mid-regeneration");
+    expect((set.itemState as ItemStateMap).q1).toEqual({ origin: "edited", pinned: false });
+  });
+
+  it("does not touch flashcards, the brief or requirements edited meanwhile", async () => {
+    const current = kitDoc();
+    current.body!.flashcards[0] = { ...current.body!.flashcards[0]!, back: "Edited back" };
+    current.body!.company_brief = { ...current.body!.company_brief, summary: "Edited summary" };
+
+    const { next, set } = await regen("technical", freshTechnical, kitDoc(), current);
+    expect(next.flashcards[0]!.back).toBe("Edited back");
+    expect(next.company_brief.summary).toBe("Edited summary");
+    expect(Object.keys(set).some((key) => key.includes("flashcards") || key.includes("brief"))).toBe(false);
+  });
+});
+
 describe("regenerateSchedule", () => {
-  it("re-plans over the current questions and resets the schedule origin", () => {
-    const result = regenerateSchedule(
-      kitDoc({ itemState: itemState({ schedule: { origin: "edited", pinned: false } }) }),
-    );
+  it("re-plans over the current questions and resets only the schedule's state", () => {
+    const current = kitDoc({ itemState: itemState({ schedule: { origin: "edited", pinned: false } }) });
+    const { set } = regenerateSchedule().commit(current);
 
-    const schedule = result.set["body.schedule"] as KitBody["schedule"];
-    const state = result.set.itemState as ItemStateMap;
-
+    const schedule = set["body.schedule"] as KitBody["schedule"];
     expect(schedule.days).toHaveLength(3);
-    expect(state.schedule).toEqual({ origin: "generated", pinned: false });
+    expect(set["itemState.schedule"]).toEqual({ origin: "generated", pinned: false });
+    expect(set.itemState).toBeUndefined();
+    expect(new Set(schedule.days.flatMap((day) => day.question_ids)).size).toBeGreaterThanOrEqual(5);
+  });
 
-    const scheduled = new Set(schedule.days.flatMap((day) => day.question_ids));
-    expect(scheduled.size).toBeGreaterThanOrEqual(5);
+  it("refuses to re-plan a pinned schedule", () => {
+    const pinned = kitDoc({ itemState: itemState({ schedule: { origin: "generated", pinned: true } }) });
+    expect(() => regenerateSchedule().commit(pinned)).toThrow(/pinned/);
+  });
+});
+
+describe("assertRegenerable", () => {
+  it("refuses a pinned brief before any model call", () => {
+    const pinned = kitDoc({ itemState: itemState({ company_brief: { origin: "generated", pinned: true } }) });
+    expect(() => assertRegenerable(pinned, "brief")).toThrow(/pinned/);
+  });
+
+  it("refuses a category the posting has nothing for", () => {
+    const technicalOnly = kitDoc();
+    technicalOnly.body!.role.requirements = technicalOnly.body!.role.requirements.filter((r) => r.kind !== "behavioural");
+    expect(() => assertRegenerable(technicalOnly, "category", "behavioural")).toThrow(/nothing to regenerate/);
+    expect(() => assertRegenerable(technicalOnly, "category", "company-fit")).not.toThrow();
   });
 });

@@ -15,7 +15,7 @@ import {
   regenerateBrief,
   regenerateCategory,
   regenerateSchedule,
-  type RegenResult,
+  type RegenPlan,
 } from "../services/regenerate.js";
 
 export type QueuedJob = {
@@ -151,9 +151,9 @@ async function runJob(job: QueuedJob): Promise<void> {
 }
 
 /**
- * Regeneration writes with a targeted `$set` on just the paths it owns, so an
- * edit the user makes elsewhere while this runs is preserved rather than
- * clobbered by a whole-document write.
+ * Regeneration does its slow work from the kit as it was, then merges into the
+ * kit as it is and writes only the paths it owns, version-checked. An edit the
+ * user makes while it runs is merged, never overwritten.
  */
 async function runRegeneration(
   job: QueuedJob,
@@ -173,26 +173,21 @@ async function runRegeneration(
       logger: logger.child({ kitId: kit._id.toString(), regen: type }),
     };
 
-    let result: RegenResult;
+    let plan: RegenPlan;
     if (type === "regen_brief") {
-      result = await regenerateBrief(kit, deps, onProgress);
+      plan = await regenerateBrief(kit, deps, onProgress);
     } else if (type === "regen_category") {
-      result = await regenerateCategory(
-        kit,
-        (category ?? "technical") as QuestionCategory,
-        deps,
-        onProgress,
-      );
+      plan = await regenerateCategory(kit, (category ?? "technical") as QuestionCategory, deps, onProgress);
     } else {
       await onProgress("schedule", "running");
-      result = regenerateSchedule(kit);
-      await onProgress("schedule", "done", result.note);
+      plan = regenerateSchedule();
+      await onProgress("schedule", "done", plan.note);
     }
 
-    await Kit.updateOne({ _id: kit._id }, { $set: result.set, $inc: { version: 1 } });
+    await commitRegeneration(kit._id, plan);
     await finishJob(job.jobId, "done");
     logger.info(
-      { kitId: kit._id.toString(), type, ms: Date.now() - started, note: result.note },
+      { kitId: kit._id.toString(), type, ms: Date.now() - started, note: plan.note },
       "regeneration finished",
     );
   } catch (error) {
@@ -200,6 +195,29 @@ async function runRegeneration(
     await finishJob(job.jobId, "failed", { code: appError.code, message: appError.message });
     logger.warn({ kitId: kit._id.toString(), type, code: appError.code }, "regeneration failed");
   }
+}
+
+// An edit landing between the read and the write only needs the merge re-run.
+const COMMIT_ATTEMPTS = 5;
+
+/**
+ * Merges a finished regeneration into the kit as it is now, and writes only if
+ * nothing else wrote in the meantime. The merge is cheap pure code, so on a
+ * conflict it simply runs again against the newer kit.
+ */
+export async function commitRegeneration(kitId: mongoose.Types.ObjectId, plan: RegenPlan): Promise<void> {
+  for (let attempt = 0; attempt < COMMIT_ATTEMPTS; attempt += 1) {
+    const current = await Kit.findById(kitId);
+    if (!current) throw new AppError("NOT_FOUND", "The kit was deleted while it was being regenerated.");
+
+    const { set } = plan.commit(current);
+    const written = await Kit.updateOne(
+      { _id: kitId, version: current.version },
+      { $set: set, $inc: { version: 1 } },
+    );
+    if (written.matchedCount === 1) return;
+  }
+  throw new AppError("VERSION_CONFLICT", "The kit kept changing while it was being regenerated. Try again.");
 }
 
 /**

@@ -14,7 +14,7 @@ import { AppError } from "../lib/errors.js";
 import { kitContentHash } from "../lib/hash.js";
 import { assertGeneratorReady, enqueueJob } from "../jobs/runner.js";
 import { createJob } from "./jobs.js";
-import { activeLockedSections, type RegenSection } from "./regenerate.js";
+import { activeLockedSections, assertRegenerable, type RegenSection } from "./regenerate.js";
 import { deletePracticeForKit } from "./practice.js";
 
 function objectId(id: string, what = "kit"): mongoose.Types.ObjectId {
@@ -165,6 +165,13 @@ export async function retryKit(userId: string, kitId: string): Promise<{ jobId: 
   if (kit.status === "generating") {
     throw new AppError("INVALID_INPUT", "That kit is already being generated.");
   }
+  // A full run replaces the whole kit, edits included; it is only for kits that never finished.
+  if (kit.status !== "failed" && kit.body) {
+    throw new AppError(
+      "INVALID_INPUT",
+      "This kit finished generating. Regenerate a section instead, so your edits are kept.",
+    );
+  }
 
   await Kit.updateOne({ _id: kit._id }, { $set: { status: "generating" } });
   const job = await createJob({ kitId: kit._id, userId: owner, type: "full" });
@@ -200,9 +207,12 @@ export async function applyKitOps(
   if (locked.length > 0) {
     const blocked = ops.map(sectionForOp).find((section) => locked.includes(section));
     if (blocked) {
+      // The locked sections go back with the error so the client can resend the
+      // edits that touch other sections instead of losing them with this batch.
       throw new AppError(
         "SECTION_LOCKED",
         `The ${blocked} section is being regenerated. Your other edits still save.`,
+        { lockedSections: locked },
       );
     }
   }
@@ -261,6 +271,8 @@ export async function requestRegeneration(
   if (section === "category" && !category) {
     throw new AppError("INVALID_INPUT", "Say which category of questions to regenerate.");
   }
+
+  assertRegenerable(kit, section, category);
 
   const locked = await activeLockedSections(id);
   const wanted = section === "category" ? "questions" : section;
