@@ -15,6 +15,34 @@ const SCORES: { score: number; patterns: string[] }[] = [
 
 const BAD_ENDINGS = [".pdf", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".zip", ".mp4", ".webp", ".ico", ".css", ".js", ".xml", ".rss"];
 
+const LISTING_ROOTS = new Set(["careers", "career", "jobs", "job", "positions", "openings", "roles", "vacancies", "opportunities"]);
+// Not "recruit": /careers/recruiting-coordinator is a job ad, not a process page.
+const PROCESS_WORDS = /hire|hiring|interview|process|expect|how-we|life-at|culture|benefit|values/;
+
+/**
+ * An individual job ad such as /careers/senior-backend-engineer-4821. Its text
+ * repeats a posting the user already pasted, and a careers page can link fifty of
+ * them, so they must not crowd out the pages that describe how hiring works.
+ */
+export function isJobListing(raw: string): boolean {
+  let segments: string[];
+  try {
+    segments = new URL(raw).pathname
+      .toLowerCase()
+      .split("/")
+      .filter((segment) => segment && !/^index\.html?$/.test(segment));
+  } catch {
+    return false;
+  }
+  const root = segments.findIndex((segment) => LISTING_ROOTS.has(segment));
+  if (root === -1 || root === segments.length - 1) return false;
+  const rest = segments.slice(root + 1).join("/");
+  return !PROCESS_WORDS.test(rest);
+}
+
+// Below "about" (3) but above zero: worth a visit only once better pages run out.
+const JOB_LISTING_SCORE = 1;
+
 export function scoreLink(link: PageLink): number {
   let url: URL;
   try {
@@ -26,6 +54,7 @@ export function scoreLink(link: PageLink): number {
   const path = url.pathname.toLowerCase();
   if (BAD_ENDINGS.some((ending) => path.endsWith(ending))) return -10;
   if (url.protocol !== "http:" && url.protocol !== "https:") return -10;
+  if (isJobListing(link.url)) return JOB_LISTING_SCORE;
 
   const haystack = `${path} ${link.text.toLowerCase()}`;
   let score = 0;

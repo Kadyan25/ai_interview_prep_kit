@@ -1,7 +1,7 @@
 import type http from "node:http";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createFixtureServer, listenOn } from "../../src/cli/fixtureServer.js";
-import { crawl } from "../../src/retrieval/crawl.js";
+import { MAX_JOB_LISTINGS, crawl, pageKey } from "../../src/retrieval/crawl.js";
 import { fetchPage, type FetchOptions } from "../../src/retrieval/fetchPage.js";
 import { RobotsCache } from "../../src/retrieval/robots.js";
 import { findHiringPage } from "../../src/pipeline/steps/findHiringPage.js";
@@ -93,6 +93,26 @@ describe("crawl against a real fixture site", () => {
     const result = await crawlSite("/nohire/");
     expect(result.pages.length).toBeGreaterThan(1);
     expect(findHiringPage(result.pages).page).toBeNull();
+  });
+
+  it("reads the hiring process page before individual job ads, and only a couple of those", async () => {
+    const result = await crawlSite("/jobsite/");
+    const paths = result.pages.map((p) => new URL(p.url).pathname);
+
+    expect(paths).toContain("/jobsite/careers/how-we-hire.html");
+    const ads = paths.filter((p) => /-\d+\.html$/.test(p));
+    expect(ads.length).toBeLessThanOrEqual(MAX_JOB_LISTINGS);
+    expect(paths.indexOf("/jobsite/careers/how-we-hire.html")).toBeLessThan(
+      Math.min(...ads.map((ad) => paths.indexOf(ad))),
+    );
+  });
+
+  it("fetches a page once however many ways it is linked", async () => {
+    const result = await crawlSite("/jobsite/");
+    const keys = result.pages.map((p) => pageKey(p.url));
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys.filter((k) => k.endsWith("/jobsite/about.html"))).toHaveLength(1);
+    expect(keys.filter((k) => k.endsWith("/jobsite/careers"))).toHaveLength(1);
   });
 
   it("returns unreachable rather than throwing for a dead host", async () => {

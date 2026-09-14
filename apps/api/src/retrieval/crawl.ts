@@ -3,7 +3,7 @@ import type { SkippedPage } from "@prep/shared";
 import type { CrawlResult, FetchedPage } from "../pipeline/types.js";
 import { extractContent } from "./cleanHtml.js";
 import { fetchPage, type FetchOptions } from "./fetchPage.js";
-import { rankLinks } from "./rankLinks.js";
+import { isJobListing, rankLinks } from "./rankLinks.js";
 import type { RobotsCache } from "./robots.js";
 
 /** A gap between requests to one site. Slower than necessary, and deliberately so. */
@@ -56,6 +56,60 @@ export type CrawlOptions = {
 
 const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Locale prefixes such as /en-in/ or /es/. Two-letter paths that are words on
+ * their own (/ai/, /go/) are not locales, so bare codes come from a fixed list.
+ */
+const LOCALE = /^(?:[a-z]{2}-[a-z]{2}|en|es|de|fr|it|pt|nl|ja|ko|zh|sv|pl|tr|ru|da|fi|nb|he|id|hi)$/i;
+
+/** Individual job ads fetched per crawl; one or two show the house style, more waste budget. */
+export const MAX_JOB_LISTINGS = 2;
+
+/**
+ * One key per page. Tracking parameters, fragments, a trailing slash and
+ * index.html all point at the same document, and fetching it three times under
+ * three spellings spent a quarter of a live crawl's budget.
+ */
+export function pageKey(raw: string): string {
+  try {
+    const url = new URL(raw);
+    const path = url.pathname
+      .replace(/\/index\.html?$/i, "/")
+      // /es/company and /de-de/company are translations of /company; one is enough.
+      .replace(/^\/([^/]+)(?=\/|$)/, (whole, first: string) => (LOCALE.test(first) ? "" : whole))
+      .replace(/\/+$/, "");
+    return `${url.protocol}//${url.host.toLowerCase()}${path}`;
+  } catch {
+    return raw;
+  }
+}
+
+/**
+ * Pages read per top-level section (/customers, /blog). A live crawl of hex.tech
+ * spent eight of its twelve pages on customer stories.
+ */
+export const MAX_PAGES_PER_SECTION = 3;
+
+
+/**
+ * "/en-in/blog/culture" → "blog", measured below the path the crawl started at,
+ * so a site that lives at example.com/acme/ has sections of its own.
+ * The homepage and section index pages have no section and are never capped.
+ */
+export function sectionOf(raw: string, startUrl: string): string | null {
+  try {
+    const base = new URL(startUrl).pathname.replace(/[^/]*$/, "");
+    let path = new URL(raw).pathname;
+    if (path.startsWith(base)) path = path.slice(base.length);
+    const segments = path.split("/").filter(Boolean);
+    const at = segments.findIndex((segment) => !LOCALE.test(segment));
+    // A section's own index page (/blog) is not one of its pages.
+    return at >= 0 && at < segments.length - 1 ? segments[at]!.toLowerCase() : null;
+  } catch {
+    return null;
+  }
+}
+
 type Candidate = { url: string; depth: number; score: number };
 
 /**
@@ -73,13 +127,26 @@ export async function crawl(startUrl: string, options: CrawlOptions): Promise<Cr
   const frontier: Candidate[] = [{ url: startUrl, depth: 0, score: Number.MAX_SAFE_INTEGER }];
   let reachable = false;
   let requests = 0;
+  let listings = 0;
+  const sections = new Map<string, number>();
 
   while (frontier.length > 0 && pages.length < options.maxPages) {
     frontier.sort((a, b) => b.score - a.score || a.depth - b.depth);
     const candidate = frontier.shift()!;
-    const key = candidate.url.replace(/\/$/, "");
+    const key = pageKey(candidate.url);
     if (visited.has(key)) continue;
     visited.add(key);
+
+    if (isJobListing(candidate.url)) {
+      if (listings >= MAX_JOB_LISTINGS) continue;
+      listings += 1;
+    }
+    const section = sectionOf(candidate.url, startUrl);
+    if (section) {
+      const count = sections.get(section) ?? 0;
+      if (count >= MAX_PAGES_PER_SECTION) continue;
+      sections.set(section, count + 1);
+    }
 
     if (!(await options.robots.isAllowed(candidate.url))) {
       skipped.push({ url: candidate.url, reason: "disallowed by robots.txt" });
@@ -96,6 +163,13 @@ export async function crawl(startUrl: string, options: CrawlOptions): Promise<Cr
     }
 
     reachable = true;
+    // A redirect can land on a page already read under another address.
+    const finalKey = pageKey(result.url);
+    if (finalKey !== key) {
+      if (visited.has(finalKey)) continue;
+      visited.add(finalKey);
+    }
+
     const extracted = extractContent(result.html, result.url);
     if (extracted.text.length < 120) {
       skipped.push({ url: result.url, reason: "page had almost no readable text" });
@@ -108,7 +182,7 @@ export async function crawl(startUrl: string, options: CrawlOptions): Promise<Cr
 
     for (const { link, score } of rankLinks(extracted.links)) {
       if (!isSameSite(link.url, startUrl)) continue;
-      if (visited.has(link.url.replace(/\/$/, ""))) continue;
+      if (visited.has(pageKey(link.url))) continue;
       frontier.push({ url: link.url, depth: candidate.depth + 1, score });
     }
   }

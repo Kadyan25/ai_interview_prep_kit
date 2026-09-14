@@ -22,6 +22,32 @@ const STRIP = [
   "template",
 ];
 
+const BLOCK_ELEMENTS = [
+  "p",
+  "div",
+  "section",
+  "article",
+  "main",
+  "li",
+  "ul",
+  "ol",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "tr",
+  "table",
+  "blockquote",
+  "pre",
+  "dl",
+  "figure",
+  "figcaption",
+  "summary",
+  "details",
+];
+
 /** Prefer the real content over the chrome that surrounds it. */
 const MAIN_SELECTORS = ["main", "article", '[role="main"]', "#content", ".content"];
 
@@ -50,6 +76,18 @@ export function extractContent(html: string, baseUrl: string): ExtractedPage {
   });
 
   $(STRIP.join(",")).remove();
+
+  // Cheerio's text() joins adjacent elements with nothing in between, so
+  // "<h2>About the role</h2><p>We are…" comes out as "About the roleWe are…".
+  // Block boundaries become line breaks before the text is read.
+  $("br").replaceWith("\n");
+  $(BLOCK_ELEMENTS.join(",")).each((_i, element) => {
+    $(element).prepend("\n").append("\n");
+  });
+  // Table cells and inline list-like chips still need at least a space.
+  $("td, th, dt, dd").each((_i, element) => {
+    $(element).append(" ");
+  });
 
   let scope = $.root();
   for (const selector of MAIN_SELECTORS) {
