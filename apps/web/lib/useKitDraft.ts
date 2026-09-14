@@ -2,8 +2,22 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { OpsError, applyOps, type KitDocument, type KitState, type Op } from "@prep/shared";
+import {
+  OpsError,
+  applyOps,
+  sectionForOp,
+  type KitDocument,
+  type KitSection,
+  type KitState,
+  type Op,
+} from "@prep/shared";
 import { ApiError, api } from "@/lib/api";
+
+/** The sections the server said are being regenerated, if the error carries them. */
+function lockedSectionsOf(error: ApiError): KitSection[] | null {
+  const details = error.details as { lockedSections?: unknown } | undefined;
+  return Array.isArray(details?.lockedSections) ? (details.lockedSections as KitSection[]) : null;
+}
 
 const FLUSH_DELAY_MS = 500;
 
@@ -43,6 +57,13 @@ export function useKitDraft(kitId: string): KitDraft {
   });
 
   const [state, setState] = useState<KitState | null>(null);
+  // The latest state, readable synchronously: apply() must not queue ops from
+  // inside a state updater, which StrictMode runs twice in development.
+  const stateRef = useRef<KitState | null>(null);
+  const syncState = useCallback((next: KitState | null) => {
+    stateRef.current = next;
+    setState(next);
+  }, []);
   const [version, setVersion] = useState(0);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -60,10 +81,10 @@ export function useKitDraft(kitId: string): KitDraft {
     if (!kit) return;
     if (queue.current.length > 0 || inFlight.current) return;
     if (kit.version === version) return;
-    setState(toState(kit));
+    syncState(toState(kit));
     setVersion(kit.version);
     baseVersion.current = kit.version;
-  }, [kit, version]);
+  }, [kit, version, syncState]);
 
   const flush = useCallback(async () => {
     if (inFlight.current || queue.current.length === 0) return;
@@ -75,7 +96,7 @@ export function useKitDraft(kitId: string): KitDraft {
 
     try {
       const result = await api.patchKit(kitId, baseVersion.current, sending);
-      setState(toState(result.kit));
+      syncState(toState(result.kit));
       setVersion(result.kit.version);
       baseVersion.current = result.kit.version;
       queryClient.setQueryData(["kit", kitId], result.kit);
@@ -91,7 +112,7 @@ export function useKitDraft(kitId: string): KitDraft {
         if (freshState) {
           try {
             const replayed = applyOps(freshState, sending);
-            setState(replayed);
+            syncState(replayed);
             setVersion(fresh.version);
             baseVersion.current = fresh.version;
             queue.current = [...sending, ...queue.current];
@@ -101,12 +122,33 @@ export function useKitDraft(kitId: string): KitDraft {
             return;
           } catch {
             // The edits no longer make sense against the newer version.
-            setState(freshState);
+            syncState(freshState);
             setVersion(fresh.version);
             baseVersion.current = fresh.version;
             setSaveState("error");
             setSaveError("This kit changed elsewhere, so those edits were dropped.");
           }
+        }
+      } else if (error instanceof ApiError && error.code === "SECTION_LOCKED" && lockedSectionsOf(error)) {
+        // Only the edits to the section being regenerated are refused. The rest of
+        // the batch goes out again rather than being lost along with them.
+        const locked = lockedSectionsOf(error)!;
+        const allowed = sending.filter((op) => !locked.includes(sectionForOp(op)));
+        setSaveState("error");
+        setSaveError(error.message);
+        const fresh = await api.getKit(kitId).then((r) => r.kit).catch(() => null);
+        const freshState = fresh ? toState(fresh) : null;
+        if (fresh && freshState) {
+          let replayed = freshState;
+          try {
+            replayed = applyOps(freshState, allowed);
+          } catch {
+            // Those edits no longer apply to the newer kit; show it as it is.
+          }
+          syncState(replayed);
+          setVersion(fresh.version);
+          baseVersion.current = fresh.version;
+          queue.current = [...allowed, ...queue.current];
         }
       } else {
         // Anything else: fall back to the server's version rather than leaving
@@ -120,7 +162,7 @@ export function useKitDraft(kitId: string): KitDraft {
           .then((r) => r.kit)
           .catch(() => null);
         if (fresh) {
-          setState(toState(fresh));
+          syncState(toState(fresh));
           setVersion(fresh.version);
           baseVersion.current = fresh.version;
           queryClient.setQueryData(["kit", kitId], fresh);
@@ -132,30 +174,30 @@ export function useKitDraft(kitId: string): KitDraft {
         timer.current = setTimeout(() => void flush(), FLUSH_DELAY_MS);
       }
     }
-  }, [kitId, queryClient]);
+  }, [kitId, queryClient, syncState]);
 
   const apply = useCallback(
     (ops: Op[]) => {
-      setState((current) => {
-        if (!current) return current;
-        try {
-          const next = applyOps(current, ops);
-          queue.current.push(...ops);
-          if (timer.current) clearTimeout(timer.current);
-          timer.current = setTimeout(() => void flush(), FLUSH_DELAY_MS);
-          setSaveState("saving");
-          setSaveError(null);
-          return next;
-        } catch (error) {
-          setSaveState("error");
-          setSaveError(
-            error instanceof OpsError ? error.message : "That change could not be applied.",
-          );
-          return current;
-        }
-      });
+      const current = stateRef.current;
+      if (!current) return;
+      try {
+        syncState(applyOps(current, ops));
+        queue.current.push(...ops);
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => void flush(), FLUSH_DELAY_MS);
+        setSaveState("saving");
+        setSaveError(null);
+      } catch (error) {
+        setSaveState("error");
+        setSaveError(error instanceof OpsError ? error.message : "That change could not be applied.");
+      }
     },
-    [flush],
+    [flush, syncState],
+  );
+
+  const refresh = useCallback(
+    () => queryClient.invalidateQueries({ queryKey: ["kit", kitId] }),
+    [queryClient, kitId],
   );
 
   // Anything typed but unsent should still go out if the tab is closing.
@@ -175,6 +217,6 @@ export function useKitDraft(kitId: string): KitDraft {
     isPending: kitQuery.isPending,
     isError: kitQuery.isError,
     apply,
-    refresh: () => queryClient.invalidateQueries({ queryKey: ["kit", kitId] }),
+    refresh,
   };
 }

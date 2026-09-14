@@ -66,6 +66,8 @@ export default function PracticePage() {
     const onKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+      // Enter and Space on a focused link or button belong to that control.
+      if (target?.closest("a, button, [role=button], summary")) return;
       if (!current) return;
 
       // Both forms: some input methods report the spacebar only as key " ".

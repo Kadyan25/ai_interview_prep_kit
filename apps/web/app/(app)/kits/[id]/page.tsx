@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, Dumbbell } from "lucide-react";
 import type { QuestionCategory } from "@prep/shared";
 import { EditableBrief } from "@/components/builder/EditableBrief";
@@ -52,6 +52,15 @@ export default function KitPage() {
 
   const job = jobQuery.data;
   const jobRunning = job?.status === "queued" || job?.status === "running";
+
+  // A regeneration leaves the kit "ready" throughout, so nothing else would
+  // reload it: fetch the kit again the moment a job stops running.
+  const wasRunning = useRef(false);
+  const { refresh } = draft;
+  useEffect(() => {
+    if (wasRunning.current && !jobRunning) void refresh();
+    wasRunning.current = jobRunning;
+  }, [jobRunning, refresh]);
   const locked = jobRunning ? (LOCKS[job.type] ?? []) : [];
   const isLocked = (section: string) => locked.includes(section);
 
