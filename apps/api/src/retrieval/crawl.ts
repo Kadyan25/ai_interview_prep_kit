@@ -4,6 +4,7 @@ import type { CrawlResult, FetchedPage } from "../pipeline/types.js";
 import { extractContent } from "./cleanHtml.js";
 import { fetchPage, type FetchOptions } from "./fetchPage.js";
 import { isJobListing, rankLinks } from "./rankLinks.js";
+import { discoverSeeds, type Seed } from "./seeds.js";
 import type { RobotsCache } from "./robots.js";
 
 /** A gap between requests to one site. Slower than necessary, and deliberately so. */
@@ -82,6 +83,8 @@ export type CrawlOptions = {
   politeDelayMs?: number;
   sleep?: (ms: number) => Promise<void>;
   onPage?: (url: string, index: number) => void;
+  /** Off in tests that only exercise link following. */
+  seeds?: (startUrl: string, fetch: FetchOptions) => Promise<Seed[]>;
 };
 
 const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -155,6 +158,13 @@ export async function crawl(startUrl: string, options: CrawlOptions): Promise<Cr
   const skipped: SkippedPage[] = [];
   const visited = new Set<string>();
   const frontier: Candidate[] = [{ url: startUrl, depth: 0, score: Number.MAX_SAFE_INTEGER }];
+
+  // The sitemap and the conventional hiring paths, tried before the homepage's own
+  // links. A seed that does not exist costs one request and no page budget.
+  for (const seed of await (options.seeds ?? discoverSeeds)(startUrl, options.fetch)) {
+    if (inCrawlScope(seed.url, startUrl)) frontier.push({ url: seed.url, depth: 1, score: seed.score });
+  }
+
   let reachable = false;
   let requests = 0;
   let listings = 0;
