@@ -152,3 +152,40 @@ describe("allocateSchedule", () => {
     expect(a).toEqual(b);
   });
 });
+
+describe("how the load is spread", () => {
+  const manyRequirements = Array.from({ length: 8 }, (_, i) => requirement(`r${i + 1}`));
+  const manyQuestions = Array.from({ length: 24 }, (_, i) =>
+    question(`q${i + 1}`, [`r${(i % 8) + 1}`], ((i % 3) + 1) as 1 | 2 | 3),
+  );
+
+  it("does not starve the last study day", () => {
+    // A 14-day plan used to end up with 15 minutes on day 13 and 160 on day 14,
+    // because the greedy fill overshot early and dumped the remainder at the end.
+    const schedule = allocateSchedule({ requirements: manyRequirements, questions: manyQuestions, days: 14 });
+    const study = schedule.days.slice(0, -1).map((d) => d.minutes);
+    const average = study.reduce((a, b) => a + b, 0) / study.length;
+    for (const minutes of study) {
+      expect(minutes, `study days ${JSON.stringify(study)}`).toBeGreaterThan(average / 3);
+    }
+  });
+
+  it("keeps the evening before the interview lighter than a study day", () => {
+    for (const days of [3, 7, 14, 30]) {
+      const schedule = allocateSchedule({ requirements: manyRequirements, questions: manyQuestions, days });
+      const study = schedule.days.slice(0, -1).map((d) => d.minutes);
+      const heaviestStudyDay = Math.max(...study);
+      const lastDay = schedule.days.at(-1)!.minutes;
+      expect(lastDay, `${days} days: last ${lastDay} vs heaviest ${heaviestStudyDay}`).toBeLessThanOrEqual(
+        heaviestStudyDay,
+      );
+    }
+  });
+
+  it("still puts the hardest must-have material in the first days", () => {
+    const schedule = allocateSchedule({ requirements: manyRequirements, questions: manyQuestions, days: 7 });
+    const firstDay = schedule.days[0]!.question_ids;
+    const hardest = manyQuestions.filter((q) => q.difficulty === 3).map((q) => q.id);
+    expect(firstDay.some((id) => hardest.includes(id))).toBe(true);
+  });
+});

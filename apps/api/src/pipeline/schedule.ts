@@ -132,21 +132,15 @@ export function allocateSchedule({
   const studyDays = days - reviewDays;
   const target = Math.ceil(sumMinutes(sorted) / studyDays);
 
+  // Filled by running total rather than day by day: a greedy pass that stops at
+  // the target overshoots early and starves the last study day, which is how a
+  // 14-day plan ended up with 15 minutes on day 13.
   const buckets: Question[][] = Array.from({ length: studyDays }, () => []);
-  let index = 0;
-
-  for (let day = 0; day < studyDays; day += 1) {
-    if (day === studyDays - 1) {
-      while (index < sorted.length) buckets[day]!.push(sorted[index++]!);
-      break;
-    }
-    let minutes = 0;
-    while (index < sorted.length && minutes < target) {
-      const question = sorted[index]!;
-      buckets[day]!.push(question);
-      minutes += questionMinutes(question);
-      index += 1;
-    }
+  let used = 0;
+  for (const question of sorted) {
+    const day = Math.min(Math.floor(used / target), studyDays - 1);
+    buckets[day]!.push(question);
+    used += questionMinutes(question);
   }
 
   const studied = buckets.filter((bucket) => bucket.length > 0);
@@ -182,12 +176,24 @@ export function allocateSchedule({
         q.difficulty === 3 &&
         q.requirement_ids.some((id) => byId.get(id)?.priority === "must"),
     );
-    const finalQuestions = hardMustHaves.length > 0 ? hardMustHaves : sorted.slice(0, 5);
+    const candidates = hardMustHaves.length > 0 ? hardMustHaves : sorted;
+    // The evening before an interview is for a light pass over the most important
+    // material, not the heaviest day of the plan: take the top questions that fit
+    // half a study day at review pace.
+    const budget = Math.max(Math.ceil(target / 2), MIN_DAY_MINUTES);
+    const finalQuestions: Question[] = [];
+    let reviewMinutes = 0;
+    for (const question of candidates) {
+      const cost = Math.ceil(questionMinutes(question) / 2);
+      if (finalQuestions.length > 0 && reviewMinutes + cost > budget) break;
+      finalQuestions.push(question);
+      reviewMinutes += cost;
+    }
     result.push({
       day: days,
       focus: focusFor(finalQuestions, byId, true),
       question_ids: finalQuestions.map((q) => q.id),
-      minutes: Math.max(Math.ceil(sumMinutes(finalQuestions) / 2), MIN_DAY_MINUTES),
+      minutes: Math.max(reviewMinutes, MIN_DAY_MINUTES),
     });
   }
 
