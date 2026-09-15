@@ -222,6 +222,7 @@ export async function runPipeline(
     requirements: role.requirements,
     hiringProcess,
     companySummary: brief.what_they_do,
+    days: parsed.days,
   };
 
   const generated = await step("generate-questions", () =>

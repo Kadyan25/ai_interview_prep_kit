@@ -30,6 +30,8 @@ export type QuestionContext = {
   requirements: Requirement[];
   hiringProcess: string | null;
   companySummary: string | null;
+  /** Days until the interview, which decides how much material is worth writing. */
+  days?: number;
 };
 
 /**
@@ -50,11 +52,15 @@ export function routeRequirements(
     context.hiringProcess && /system design|architecture|design round/i.test(context.hiringProcess),
   );
 
-  const systemDesign = technical.filter(
-    (r) =>
-      r.kind === "technical" &&
-      (SYSTEM_DESIGN_HINT.test(r.text) || seniorityTriggers || hiringTriggers),
-  );
+  // Seniority alone used to be enough, which gave a "Sr Manager, Partner Programs"
+  // six system-design questions. No design round is coming for that job.
+  const systemDesign = buildsSystems(context)
+    ? technical.filter(
+        (r) =>
+          r.kind === "technical" &&
+          (SYSTEM_DESIGN_HINT.test(r.text) || seniorityTriggers || hiringTriggers),
+      )
+    : [];
 
   return {
     technical,
@@ -65,9 +71,60 @@ export function routeRequirements(
   };
 }
 
+const TECHNICAL_ROLE =
+  /engineer|developer|programmer|architect|sre|devops|platform|infrastructure|data scientist|data engineer|machine learning|\bml\b|\bai\b engineer|security|qa|test automation|technical lead|cto|scientist/i;
+
+/**
+ * Whether a design round is plausible for this role: the title says so, or the
+ * company's own hiring page mentions one, or most of what the posting asks for is
+ * technical craft rather than domain or people skills.
+ */
+function buildsSystems(context: QuestionContext): boolean {
+  if (TECHNICAL_ROLE.test(context.roleTitle)) return true;
+  if (context.hiringProcess && /system design|architecture (interview|round)/i.test(context.hiringProcess)) {
+    return true;
+  }
+  const technical = context.requirements.filter((r) => r.kind === "technical").length;
+  return technical >= 3 && technical >= context.requirements.length / 2;
+}
+
+/**
+ * How many questions the whole kit should hold, given the time the user has.
+ * Thirty questions across three days came out as seven hours a day; the plan has
+ * to be something a person can actually work through.
+ */
+export function questionBudget(days: number): number {
+  return Math.max(8, Math.min(40, days * 5));
+}
+
 /** Two questions per requirement, floored at 3 and capped at 12. */
 export function questionCount(requirementCount: number): number {
   return Math.min(12, Math.max(3, requirementCount * 2));
+}
+
+/** Each category's share of the kit's questions. */
+const CATEGORY_SHARE: Record<QuestionCategory, number> = {
+  technical: 0.4,
+  behavioural: 0.3,
+  "system-design": 0.2,
+  "company-fit": 0.1,
+};
+
+/**
+ * How many questions to ask for: enough to cover the requirements, but never more
+ * of the kit than the days available can hold.
+ */
+export function countFor(
+  category: QuestionCategory,
+  requirementCount: number,
+  days: number | undefined,
+): number {
+  const wanted = category === "company-fit" ? 4 : questionCount(requirementCount);
+  if (days === undefined) return wanted;
+  const share = Math.round(questionBudget(days) * CATEGORY_SHARE[category]);
+  // Every kit should carry a few "why here" questions, however short the plan.
+  const floor = category === "company-fit" ? 3 : 2;
+  return Math.max(floor, Math.min(wanted, share));
 }
 
 export async function generateForCategory(
@@ -76,8 +133,7 @@ export async function generateForCategory(
   context: QuestionContext,
   deps: PipelineDeps,
 ): Promise<DraftQuestion[]> {
-  const count =
-    category === "company-fit" ? 4 : questionCount(requirements.length);
+  const count = countFor(category, requirements.length, context.days);
 
   const result = await deps.llm.generateJson({
     task: `generateQuestions:${category}`,
