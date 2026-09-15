@@ -108,5 +108,46 @@ export function extractContent(html: string, baseUrl: string): ExtractedPage {
     .join("\n")
     .trim();
 
-  return { title, text, links };
+  return { title, text: text.length >= THIN_PAGE_CHARS ? text : bestOf(text, embeddedText(html)), links };
+}
+
+// Below this a page is chrome and a loading spinner, not content.
+const THIN_PAGE_CHARS = 400;
+// Sentence-like: long enough and with spaces, so ids, class names and URLs are skipped.
+const SENTENCE = /^[^<>{}]*\s[^<>{}]*$/;
+const MIN_EMBEDDED_STRING = 40;
+const MAX_EMBEDDED_CHARS = 20_000;
+
+function bestOf(text: string, embedded: string): string {
+  return embedded.length > text.length ? embedded : text;
+}
+
+/**
+ * Text from the JSON a client-rendered page ships with: Next.js and Nuxt
+ * payloads, JSON-LD, inline state. Only used when the HTML body itself is
+ * near-empty, which is what a framework site looks like to a crawler — sumup.com
+ * gave us 535 characters of readable text and 1,408 in its script payloads.
+ */
+export function embeddedText(html: string): string {
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  let total = 0;
+
+  for (const script of html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)) {
+    const body = script[1] ?? "";
+    if (body.length < 200 || !/[{[]/.test(body)) continue;
+
+    for (const match of body.matchAll(/"((?:[^"\\]|\\.){40,2000})"/g)) {
+      const value = match[1]!.replace(/\\[nrt]/g, " ").replace(/\\"/g, '"').replace(/\s+/g, " ").trim();
+      if (value.length < MIN_EMBEDDED_STRING || !SENTENCE.test(value)) continue;
+      if (/^(https?:|data:|\/|[\w-]+\.(js|css|png|jpe?g|svg|woff2?))/i.test(value)) continue;
+      if (seen.has(value)) continue;
+      seen.add(value);
+      parts.push(value);
+      total += value.length;
+      if (total >= MAX_EMBEDDED_CHARS) return parts.join("\n");
+    }
+  }
+
+  return parts.join("\n");
 }

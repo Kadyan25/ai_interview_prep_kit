@@ -124,6 +124,24 @@ describe("crawl against a real fixture site", () => {
     }
   });
 
+  it("reaches a hiring page on a site with no links to follow", async () => {
+    // /spa/ renders in the browser: its body is an empty div and its copy lives in
+    // a JSON payload, so there is no link on it at all. Only the conventional
+    // paths get the crawler to /spa/careers/ and from there to how-we-hire.
+    const result = await crawlSite("/spa/");
+    const paths = result.pages.map((p) => new URL(p.url).pathname);
+
+    expect(paths).toContain("/spa/careers/");
+    expect(paths).toContain("/spa/careers/how-we-hire.html");
+    expect(findHiringPage(result.pages).page?.url).toContain("how-we-hire");
+  });
+
+  it("reads the copy a client-rendered page ships as JSON", async () => {
+    const result = await crawlSite("/spa/");
+    const home = result.pages.find((p) => new URL(p.url).pathname === "/spa/");
+    expect(home?.text).toContain("Northwind Rail builds scheduling software");
+  });
+
   it("returns unreachable rather than throwing for a dead host", async () => {
     const options = fetchOptions();
     const result = await crawl("http://127.0.0.1:1/", {
