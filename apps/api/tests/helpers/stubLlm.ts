@@ -1,6 +1,6 @@
 import type { LlmClient } from "../../src/llm/types.js";
 
-export type StubHandler = (user: string) => unknown;
+export type StubHandler = (user: string) => unknown | Promise<unknown>;
 
 /**
  * A model stand-in. Tests map a task name to the JSON that task should return,
@@ -20,7 +20,9 @@ export function stubLlm(handlers: Record<string, StubHandler | unknown>): {
       if (handler === undefined) {
         throw new Error(`stub llm has no handler for task "${task}"`);
       }
-      const payload = typeof handler === "function" ? (handler as StubHandler)(user) : handler;
+      // Awaited, so a handler can return a promise and stand in for a slow or
+      // never-answering provider.
+      const payload = typeof handler === "function" ? await (handler as StubHandler)(user) : handler;
       if (payload instanceof Error) throw payload;
       return schema.parse(payload);
     },

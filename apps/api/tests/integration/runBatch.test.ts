@@ -139,6 +139,25 @@ describe("runBatch", () => {
   });
 });
 
+describe("a case that will not finish", () => {
+  it("is recorded as failed and the run carries on", async () => {
+    const { llm } = stubLlm({
+      ...handlers,
+      // Extraction never returns for the first case.
+      extractRequirements: (user: string) =>
+        user.includes("STALL") ? new Promise(() => undefined) : EXTRACTED_REQUIREMENTS,
+    });
+    const stalling = { ...goodCase, id: "stalls", jd: `${FULL_JD}\nSTALL` };
+
+    const started = Date.now();
+    const output = await runBatch([stalling, goodCase], { llm, logger: silentLogger }, { budgetMs: 150 });
+
+    expect(output.kits.map((k) => k.status)).toEqual(["failed", "ok"]);
+    expect(output.kits[0]!.error?.code).toBe("TIMEOUT");
+    expect(Date.now() - started).toBeLessThan(5000);
+  });
+});
+
 describe("readCases", () => {
   const good = { id: "a", jd: FULL_JD, company_url: "https://acme.test", days: 5 };
 

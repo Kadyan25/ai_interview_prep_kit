@@ -18,14 +18,41 @@ export type BatchHooks = {
   onProgress?: BatchProgress;
   /** Called with everything so far after each case, so a crash late in a run keeps the earlier kits. */
   persist?: (payload: EvaluateOutput) => Promise<void>;
+  /** Per-case ceiling; defaults to CASE_BUDGET_MS. */
+  budgetMs?: number;
 };
 
-async function runCase(testCase: BatchCase, deps: PipelineDeps): Promise<{ result: EvaluateResult; detail: string }> {
+/**
+ * The brief allows fifteen minutes for five cases. A case that cannot finish in
+ * its share is recorded as failed and the run moves on: one stuck case must not
+ * take the other four down with it. (A live run once saw a single provider
+ * request hang for three hours.)
+ */
+export const CASE_BUDGET_MS = 5 * 60 * 1000;
+
+function withDeadline<T>(work: Promise<T>, budgetMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return Promise.race([
+    work,
+    new Promise<never>((_resolve, reject) => {
+      timer = setTimeout(
+        () => reject(new AppError("TIMEOUT", `This case did not finish within ${Math.round(budgetMs / 1000)}s.`)),
+        budgetMs,
+      );
+    }),
+  ]).finally(() => clearTimeout(timer)) as Promise<T>;
+}
+
+async function runCase(
+  testCase: BatchCase,
+  deps: PipelineDeps,
+  budgetMs: number,
+): Promise<{ result: EvaluateResult; detail: string }> {
   try {
     if (testCase.problem) throw new AppError("INVALID_INPUT", `Invalid case: ${testCase.problem}.`);
-    const output = await runPipeline(
-      { jd: testCase.jd, companyUrl: testCase.company_url, days: testCase.days },
-      deps,
+    const output = await withDeadline(
+      runPipeline({ jd: testCase.jd, companyUrl: testCase.company_url, days: testCase.days }, deps),
+      budgetMs,
     );
     const body = output.body;
     return {
@@ -60,7 +87,7 @@ export async function runBatch(
 
   for (const [index, testCase] of cases.entries()) {
     const started = Date.now();
-    const { result, detail } = await runCase(testCase, deps);
+    const { result, detail } = await runCase(testCase, deps, hooks.budgetMs ?? CASE_BUDGET_MS);
     payload.kits.push(result);
     payload.generated_at = new Date().toISOString();
 
