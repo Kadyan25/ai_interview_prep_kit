@@ -148,7 +148,11 @@ async function searchTavily(
     method: "POST",
     headers: { Authorization: `Bearer ${options.tavilyApiKey}` },
     body: {
-      query: `"${company}" interview process`,
+      // The domain goes in the query because a name alone finds the wrong company:
+      // searching "Acme" returned interview pages for Acme Markets, a grocery chain.
+      query: [`"${company}"`, domainOf(options.companyUrl), "interview process"]
+        .filter(Boolean)
+        .join(" "),
       max_results: MAX_HITS,
       // "basic" costs one credit; "advanced" costs two. Never let the API pick.
       search_depth: "basic",

@@ -179,22 +179,38 @@ describe("Tavily credit protection", () => {
 
 describe("howTheyHire", () => {
   const hit = { url: "https://news.ycombinator.com/item?id=3", title: "t", snippet: "s" };
+  const page = { url: "https://acme.test/about", title: "About", text: "About Acme." };
 
-  it("states the company's own page as fact", () => {
-    expect(howTheyHire({ hiringProcess: "Three rounds", discussion: [] }, "Three rounds.")).toBe("Three rounds.");
+  it("states the company's own hiring page as fact", () => {
+    expect(howTheyHire({ hiringProcess: "Three rounds", discussion: [], pages: [] }, "Three rounds.")).toBe(
+      "Three rounds.",
+    );
   });
 
-  it("labels a process taken from discussion as candidate reports", () => {
-    const text = howTheyHire({ hiringProcess: null, discussion: [hit] }, "A recruiter call, then a pairing round.");
+  it("labels a process that could only have come from discussion as candidate reports", () => {
+    const text = howTheyHire({ hiringProcess: null, discussion: [hit], pages: [] }, "A recruiter call, then pairing.");
     expect(text).toMatch(/candidate reports/i);
-    expect(text).toContain("A recruiter call, then a pairing round.");
+    expect(text).toContain("A recruiter call, then pairing.");
   });
 
-  it("says nothing was found when neither source describes a process", () => {
-    expect(howTheyHire({ hiringProcess: null, discussion: [hit] }, "")).toMatch(/no public description/i);
+  it("does not call it candidate reports when their own pages were read", () => {
+    // A live run labelled the fixture site's own how-we-hire text as candidate reports.
+    const bothSources = howTheyHire({ hiringProcess: null, discussion: [hit], pages: [page] }, "Screen, take-home, panel.");
+    expect(bothSources).toMatch(/their site and public posts/i);
+    expect(bothSources).not.toMatch(/candidate reports/i);
+
+    const siteOnly = howTheyHire({ hiringProcess: null, discussion: [], pages: [page] }, "Screen, take-home, panel.");
+    expect(siteOnly).toMatch(/rest of their site/i);
+    expect(siteOnly).toContain("Screen, take-home, panel.");
+  });
+
+  it("says nothing was found when no source describes a process", () => {
+    expect(howTheyHire({ hiringProcess: null, discussion: [hit], pages: [page] }, "")).toMatch(/no public description/i);
     expect(
-      howTheyHire({ hiringProcess: null, discussion: [hit] }, "No public description of the process was found."),
-    ).not.toMatch(/candidate reports/i);
-    expect(howTheyHire({ hiringProcess: null, discussion: [] }, "Made-up loop")).toMatch(/no public description/i);
+      howTheyHire({ hiringProcess: null, discussion: [hit], pages: [] }, "No public description was found."),
+    ).toMatch(/no public description/i);
+    expect(howTheyHire({ hiringProcess: null, discussion: [], pages: [] }, "Made-up loop")).toMatch(
+      /no public description/i,
+    );
   });
 });

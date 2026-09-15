@@ -21,6 +21,14 @@ import {
 // A realistic ceiling for one day of preparation alongside a job.
 const LONG_DAY_MINUTES = 8 * 60;
 
+// Labels that stand in for a company nobody named, and so are not worth searching for.
+const PLACEHOLDER_COMPANY = /^(the company|unknown company|localhost|unspecified|n\/?a)$/i;
+
+function namesACompany(label: string): boolean {
+  const name = label.trim();
+  return name.length >= 3 && !PLACEHOLDER_COMPANY.test(name);
+}
+
 /** The step list the UI renders before anything has run. */
 export const PIPELINE_STEPS = [
   { name: "parse-input", label: "Reading the job description" },
@@ -146,6 +154,10 @@ export async function runPipeline(
       } catch (error) {
         await report("summarise-hiring", "failed", message(error));
         hiringProcess = null;
+        hiringPageUrl = null;
+        warnings.add(
+          "Their hiring page was found but could not be read, so this kit does not describe their process.",
+        );
       }
     }
   }
@@ -153,8 +165,16 @@ export async function runPipeline(
   let discussion: DiscussionHit[] = [];
   if (!deps.research) {
     await report("search-discussion", "skipped", "Research is disabled for this run");
+  } else if (!namesACompany(companyLabel)) {
+    // Searching for "the company" or "Localhost" spends a paid search credit on
+    // whatever happens to mention the word.
+    await report("search-discussion", "skipped", "The posting does not name the company");
+    warnings.add(
+      "Neither the posting nor the URL names the company, so no public discussion of their interviews could be searched for.",
+    );
   } else {
     await report("search-discussion", "running");
+    let searched = true;
     try {
       discussion = await deps.research.searchDiscussion(companyLabel, parsed.companyUrl ?? undefined);
       await report(
@@ -163,11 +183,14 @@ export async function runPipeline(
         discussion.length > 0 ? `${discussion.length} mentions found` : "Nothing public found",
       );
     } catch (error) {
+      searched = false;
       await report("search-discussion", "done", `Search failed: ${message(error)}`);
     }
     if (discussion.length === 0) {
       warnings.add(
-        `No public discussion of ${companyLabel}'s interview process was found, so nothing here is second-hand.`,
+        searched
+          ? `No public discussion of ${companyLabel}'s interview process was found, so nothing here is second-hand.`
+          : `The search for public discussion of ${companyLabel}'s interviews did not run, so nothing here is second-hand.`,
       );
     }
   }
@@ -208,6 +231,11 @@ export async function runPipeline(
   for (const outcome of generated.outcomes) {
     if (outcome.status === "failed") {
       warnings.add(`The ${outcome.category} questions could not be generated on this run.`);
+    }
+    if (outcome.status === "skipped") {
+      warnings.add(
+        `The posting has nothing a ${outcome.category} question could be about, so this kit has none.`,
+      );
     }
   }
 

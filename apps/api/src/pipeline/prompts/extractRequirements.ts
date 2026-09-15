@@ -17,9 +17,14 @@ Rules you must follow:
   in English.
 - If you cannot quote the job description for something, do not report it.
 - Do not add industry-standard expectations that the posting does not mention.
-- "kind" is "technical" for tools, languages, systems and engineering practice,
-  "behavioural" for collaboration, communication, ownership and leadership,
-  "domain" for industry or product knowledge.
+- "kind" is "technical" for the craft of the job — tools, systems, procedures and
+  practice, whatever the profession: Kubernetes for an engineer, triage protocols
+  for a nurse, a CRM for a salesperson. "behavioural" is collaboration,
+  communication, ownership and leadership. "domain" is industry or product
+  knowledge, and also licences, certifications, eligibility, location and
+  availability: a state licence or "must work weekends" is not a skill to practise.
+- Not every posting is a software posting. Report what that profession actually
+  asks for rather than forcing it into engineering terms.
 - "priority" is "must" when the posting treats it as required and "nice" when it
   is optional, preferred or a bonus.
 - "cue" is the single word or phrase in the posting that told you the priority,

@@ -70,7 +70,7 @@ const NOTHING_FOUND =
  * because a thread from three years ago is not the company's current process.
  */
 export function howTheyHire(
-  context: Pick<BriefContext, "hiringProcess" | "discussion">,
+  context: Pick<BriefContext, "hiringProcess" | "discussion" | "pages">,
   modelText: string,
 ): string {
   if (context.hiringProcess) {
@@ -78,7 +78,18 @@ export function howTheyHire(
   }
   // Models sometimes answer "nothing was found" instead of the empty string asked for.
   const saysNothing = /^(there (is|was|were|are) )?(no|none)\b/i.test(modelText);
-  if (context.discussion.length > 0 && modelText && !saysNothing) {
+  if (!modelText || saysNothing) return NOTHING_FOUND;
+
+  // No page of theirs set out a process, so whatever this is came from their
+  // other pages, from public posts, or both. Which one decides the wording: a
+  // claim about their process is only as good as where it came from.
+  if (context.pages.length > 0 && context.discussion.length > 0) {
+    return `No page of theirs sets out their process. Pieced together from their site and public posts, unverified: ${modelText}`;
+  }
+  if (context.pages.length > 0) {
+    return `No page of theirs sets out their process. Inferred from the rest of their site, unverified: ${modelText}`;
+  }
+  if (context.discussion.length > 0) {
     return `Their site does not describe the process. Unverified candidate reports: ${modelText}`;
   }
   return NOTHING_FOUND;
