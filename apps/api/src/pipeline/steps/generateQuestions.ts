@@ -5,6 +5,13 @@ import {
   generateQuestionsSystem,
   generateQuestionsUser,
 } from "../prompts/generateQuestions.js";
+import {
+  SYSTEMS_WORK,
+  isEngineeringTitle,
+  isJunior,
+  isNonEngineeringTitle,
+  processHasDesignRound,
+} from "../roles.js";
 import type { DraftQuestion, PipelineDeps } from "../types.js";
 
 const questionsSchema = z.object({
@@ -20,10 +27,6 @@ const questionsSchema = z.object({
     .default([]),
 });
 
-// Software-systems language only. "design" and "system" on their own matched a
-// product designer's "design systems" experience and produced a design round.
-const SYSTEM_DESIGN_HINT =
-  /system design|software architect|architecture|distributed|micro-?service|scalab|high availability|throughput|latency|api design|data pipeline|infrastructure|kubernetes|database schema/i;
 const SENIOR_ENOUGH = /mid|senior|staff|lead|principal/i;
 
 export type QuestionContext = {
@@ -51,17 +54,20 @@ export function routeRequirements(
   const behavioural = context.requirements.filter((r) => r.kind === "behavioural");
 
   const seniorityTriggers = SENIOR_ENOUGH.test(context.seniority);
-  const hiringTriggers = Boolean(
-    context.hiringProcess && /system design|architecture|design round/i.test(context.hiringProcess),
-  );
+  const hiringTriggers = processHasDesignRound(context.hiringProcess);
 
-  // Seniority alone used to be enough, which gave a "Sr Manager, Partner Programs"
-  // six system-design questions. No design round is coming for that job.
+  // Whether a round is plausible is decided by the role; which requirements it
+  // draws on by how clearly each one is systems work. An engineering title that is
+  // not junior draws on all its technical requirements: a backend engineer whose
+  // posting says "building services in Go" still gets a design round, which the
+  // real-kit fixtures caught when the hint words alone decided it.
+  const seniorEngineer =
+    isEngineeringTitle(context.roleTitle) && !isJunior(context.roleTitle) && !isJunior(context.seniority);
   const systemDesign = buildsSystems(context)
     ? technical.filter(
         (r) =>
           r.kind === "technical" &&
-          (SYSTEM_DESIGN_HINT.test(r.text) || seniorityTriggers || hiringTriggers),
+          (seniorEngineer || SYSTEMS_WORK.test(r.text) || seniorityTriggers || hiringTriggers),
       )
     : [];
 
@@ -74,29 +80,20 @@ export function routeRequirements(
   };
 }
 
-const TECHNICAL_ROLE =
-  /engineer|developer|programmer|architect|sre|devops|platform|infrastructure|data scientist|data engineer|machine learning|\bml\b|\bai\b engineer|security|qa|test automation|technical lead|cto|scientist/i;
-
-// Crafts with their own "design" vocabulary that is nothing to do with system design.
-const NON_ENGINEERING_ROLE =
-  /designer|design (lead|manager|director)|researcher|marketing|sales|account (executive|manager)|recruit|people|finance|legal|content|writer|nurse|physician|teacher|chef|kitchen|driver|support specialist/i;
-
 /**
  * Whether a system-design round is plausible for this role. The company's own
  * process decides it when they publish one; otherwise the title must be an
  * engineering one, or the posting must actually talk about building systems.
  */
-function buildsSystems(context: QuestionContext): boolean {
-  if (context.hiringProcess && /system design|architecture (interview|round)/i.test(context.hiringProcess)) {
-    return true;
-  }
-  if (NON_ENGINEERING_ROLE.test(context.roleTitle)) return false;
-  if (TECHNICAL_ROLE.test(context.roleTitle)) return true;
+export function buildsSystems(context: Pick<QuestionContext, "roleTitle" | "requirements" | "hiringProcess">): boolean {
+  if (processHasDesignRound(context.hiringProcess)) return true;
+  if (isNonEngineeringTitle(context.roleTitle)) return false;
+  if (isEngineeringTitle(context.roleTitle)) return true;
 
   // An unfamiliar title still qualifies if the work itself is systems work: not
   // "mostly technical requirements", which counts a designer's tools as technical.
   const systemsWork = context.requirements.filter(
-    (r) => r.kind === "technical" && SYSTEM_DESIGN_HINT.test(r.text),
+    (r) => r.kind === "technical" && SYSTEMS_WORK.test(r.text),
   ).length;
   return systemsWork >= 2;
 }

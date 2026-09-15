@@ -1,0 +1,4615 @@
+{
+  "capturedFrom": "live pipeline runs, 2026-09-14/15",
+  "kits": [
+    {
+      "id": "real-hex-backend",
+      "company": "Hex",
+      "roleTitle": "Software Engineer, Backend (Product)",
+      "seniority": "unspecified",
+      "days": 7,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "5+ years of backend or full‑stack engineering experience",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Build complex systems with intricate business logic",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Interest or experience in state‑of‑the‑art agentic workflows",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Remote‑first team experience with strong communication",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Passion for technical collaboration via RFCs, code reviews, architecture talks",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "Hands‑on experience with SSO, SCIM provisioning, audit logs, MFA, delegated access",
+          "kind": "technical",
+          "priority": "nice"
+        },
+        {
+          "id": "r7",
+          "text": "Strategic mindset balancing business goals and engineering trade‑offs",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r8",
+          "text": "Willingness to modify any part of the stack to create impact",
+          "kind": "behavioural",
+          "priority": "must"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q9",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q10",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q11",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q12",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q13",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4",
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q14",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5",
+            "r7"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q15",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r7",
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q16",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q17",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q18",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q19",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q20",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q21",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q22",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        },
+        {
+          "id": "q23",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        }
+      ]
+    },
+    {
+      "id": "real-coinbase-enterprise-apps",
+      "company": "Coinbase",
+      "roleTitle": "Software Engineer, Enterprise Apps",
+      "seniority": "mid",
+      "days": 4,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "5+ years software engineering, proficient in Go, building scalable backend services with gRPC, event‑driven (Kafka) and SQL/NoSQL.",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Experience evaluating, integrating, and operating third‑party SaaS applications and vendor APIs in production.",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Experience running production systems on AWS with Kubernetes, Terraform, CI/CD tools (BuildKite) and rate limiters, caching, load balancing, circuit breakers.",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Proven ability to influence technical architecture and build reliable high‑traffic production systems.",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Uses generative AI responsibly with human oversight to improve workflow efficiency, cost and quality.",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "Demonstrates responsible use of AI tools and copilots (LibreChat, Gemini, Glean) with human‑in‑the‑loop practices.",
+          "kind": "technical",
+          "priority": "must"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q9",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "technical",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q11",
+          "category": "technical",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q12",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q13",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q14",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2",
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q15",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q16",
+          "category": "system-design",
+          "requirement_ids": [
+            "r3",
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q17",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q18",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r3"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q19",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2",
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q20",
+          "category": "system-design",
+          "requirement_ids": [
+            "r4",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q21",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q22",
+          "category": "system-design",
+          "requirement_ids": [
+            "r5",
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q23",
+          "category": "system-design",
+          "requirement_ids": [
+            "r3",
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q24",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r3"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q25",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q26",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q27",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q28",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "real-gitlab-staff-pm",
+      "company": "GitLab",
+      "roleTitle": "Staff Product Manager, RevOps & Finance Systems",
+      "seniority": "staff",
+      "days": 10,
+      "designRoundExpected": false,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "8+ years product management experience, with 3+ years internal platform or systems product leadership",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Deep domain expertise in Quote‑to‑Cash systems (Salesforce CPQ, Zuora Billing, Zuora Revenue, NetSuite ERP)",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Hands‑on configuration or implementation experience with QTC systems (preferred)",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Ability to own and communicate multi‑quarter internal product roadmaps to senior stakeholders",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Strong command of revenue lifecycle processes including billing and ASC 606 revenue recognition",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "Experience operating in a SOX‑controlled environment with audit and change‑management knowledge",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r7",
+          "text": "Track record of running complex, multi‑program delivery environments with shared engineering resources",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r8",
+          "text": "Technical fluency to discuss API design, data models, and integration trade‑offs without coding",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r9",
+          "text": "Experience with consumption‑based or usage‑based billing models",
+          "kind": "domain",
+          "priority": "must"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r2",
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r3",
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q9",
+          "category": "technical",
+          "requirement_ids": [
+            "r6",
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "technical",
+          "requirement_ids": [
+            "r9",
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q11",
+          "category": "technical",
+          "requirement_ids": [
+            "r2",
+            "r3"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q12",
+          "category": "technical",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q13",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q14",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q15",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q16",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q17",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q18",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q19",
+          "category": "system-design",
+          "requirement_ids": [
+            "r3",
+            "r8"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q20",
+          "category": "system-design",
+          "requirement_ids": [
+            "r3",
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q21",
+          "category": "system-design",
+          "requirement_ids": [
+            "r3",
+            "r8"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q22",
+          "category": "system-design",
+          "requirement_ids": [
+            "r3",
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q23",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q24",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q25",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        },
+        {
+          "id": "q26",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-01-gitlab-staff-forward-deployed-engineer",
+      "company": "GitLab",
+      "roleTitle": "Staff Forward Deployed Engineer, Agentic SDLC",
+      "seniority": "staff",
+      "days": 14,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "Staff‑level experience building, operating, or improving complex production software systems",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Contribute to large, mature product codebases with high testing, maintainability, performance, and security standards",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Strong Ruby on Rails or Go experience to contribute directly to GitLab product",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Experience with AI‑assisted development, agentic workflows, AI governance, model evaluation, or AI adoption in enterprises",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Diagnose complex system behavior across code, data stores, infrastructure, observability, networking, APIs, and usage patterns",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "Deep knowledge of modern DevSecOps workflows including Git, merge requests, CI/CD, security, compliance, and enterprise delivery",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r7",
+          "text": "Experience working with strategic customers or senior technical stakeholders in ambiguous, high‑impact situations",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r8",
+          "text": "Coordinate across product, engineering, field, and customer teams without formal authority",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r9",
+          "text": "Strong written communication and sound judgment to create technical narratives and avoid custom‑only solutions",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r10",
+          "text": "Direct experience with GitLab platform (GitLab.com, Dedicated, or Self‑Managed)",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r11",
+          "text": "Production experience with Ruby on Rails, Go, PostgreSQL, Redis, Sidekiq, Vue, TypeScript, Kubernetes, Docker, Linux, or observability tools",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r12",
+          "text": "Deep familiarity with Git internals, repository performance, large‑scale Git usage patterns, or Runner behavior",
+          "kind": "domain",
+          "priority": "nice"
+        },
+        {
+          "id": "r13",
+          "text": "Create technical thought‑leadership materials such as whitepapers, talks, frameworks, or public technical writing",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r14",
+          "text": "Background in performance, site reliability, platform, infrastructure engineering, or distributed systems",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r15",
+          "text": "Experience working in open source or highly asynchronous engineering environments",
+          "kind": "behavioural",
+          "priority": "must"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r10"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r2",
+            "r11"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r5",
+            "r11"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r4",
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r12",
+            "r14"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r3",
+            "r11"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r6",
+            "r14"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r4",
+            "r14"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q9",
+          "category": "technical",
+          "requirement_ids": [
+            "r11",
+            "r14"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q10",
+          "category": "technical",
+          "requirement_ids": [
+            "r5",
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q11",
+          "category": "technical",
+          "requirement_ids": [
+            "r2",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q12",
+          "category": "technical",
+          "requirement_ids": [
+            "r5",
+            "r14"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q13",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q14",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q15",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q16",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q17",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r13"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q18",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r15"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q19",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1",
+            "r7"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q20",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r8",
+            "r9"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q21",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r13",
+            "r15"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q22",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q23",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q24",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q25",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2",
+            "r3"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q26",
+          "category": "system-design",
+          "requirement_ids": [
+            "r3",
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q27",
+          "category": "system-design",
+          "requirement_ids": [
+            "r11"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q28",
+          "category": "system-design",
+          "requirement_ids": [
+            "r5",
+            "r11"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q29",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q30",
+          "category": "system-design",
+          "requirement_ids": [
+            "r5",
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q31",
+          "category": "system-design",
+          "requirement_ids": [
+            "r11",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q32",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q33",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q34",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q35",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        },
+        {
+          "id": "q36",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        }
+      ]
+    },
+    {
+      "id": "qa-02-stripe-backend-engineer-core-technology",
+      "company": "Stripe",
+      "roleTitle": "Unspecified role",
+      "seniority": "unspecified",
+      "days": 7,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "Strong software engineering skills and passion for relevant area",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Write high-quality code in languages such as Go, Java, C/C++",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "2–12+ years hands‑on software development with algorithms and data structures",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Hands‑on experience building large‑scale distributed systems",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Strong collaboration across workstreams and help peers succeed",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "Customer obsession; articulate user experience to drive outcomes",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r7",
+          "text": "Thrive with autonomy, responsibility, and an entrepreneurial mindset",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r8",
+          "text": "Experience optimizing end‑to‑end performance of distributed systems",
+          "kind": "technical",
+          "priority": "nice"
+        },
+        {
+          "id": "r9",
+          "text": "Focus on needs of internal and external users",
+          "kind": "behavioural",
+          "priority": "nice"
+        },
+        {
+          "id": "r10",
+          "text": "Hold yourself and others to a high bar in production",
+          "kind": "behavioural",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r2",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r4",
+            "r8"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q9",
+          "category": "technical",
+          "requirement_ids": [
+            "r3",
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q10",
+          "category": "technical",
+          "requirement_ids": [
+            "r8",
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q11",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q12",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q13",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q14",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q15",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r10"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q16",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5",
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q17",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q18",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q19",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r10"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q20",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5",
+            "r7"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q21",
+          "category": "system-design",
+          "requirement_ids": [
+            "r4",
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q22",
+          "category": "system-design",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q23",
+          "category": "system-design",
+          "requirement_ids": [
+            "r4",
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q24",
+          "category": "system-design",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q25",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q26",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q27",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q28",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-04-bridge-software-engineer",
+      "company": "Bridge",
+      "roleTitle": "Software Engineer",
+      "seniority": "unspecified",
+      "days": 5,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "5+ years of experience",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Experience building backend systems with SQL databases",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Experience with frameworks such as Rails, Django, Express, or equivalent",
+          "kind": "technical",
+          "priority": "nice"
+        },
+        {
+          "id": "r4",
+          "text": "An enlarged sense of ownership and the ability to lead and influence design",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "An ability to thrive in a fast-paced environment",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "A growth mindset, constant curiosity, and fearlessness to dive into the unknown",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r7",
+          "text": "An ability to write maintainable, well-tested, modular code, but also be pragmatic about moving fast",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r8",
+          "text": "Excellent written and verbal communication skills",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r9",
+          "text": "Past experience working on crypto or financial products",
+          "kind": "domain",
+          "priority": "nice"
+        },
+        {
+          "id": "r10",
+          "text": "Passionate about building in the crypto/financial space",
+          "kind": "behavioural",
+          "priority": "nice"
+        },
+        {
+          "id": "r11",
+          "text": "Experience with building API products",
+          "kind": "technical",
+          "priority": "nice"
+        },
+        {
+          "id": "r12",
+          "text": "Experience working with blockchain or distributed systems",
+          "kind": "technical",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r11"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r12"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r2",
+            "r7"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q9",
+          "category": "technical",
+          "requirement_ids": [
+            "r3",
+            "r11"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "technical",
+          "requirement_ids": [
+            "r12",
+            "r9"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q11",
+          "category": "technical",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q12",
+          "category": "technical",
+          "requirement_ids": [
+            "r7",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q13",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q14",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q15",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q16",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q17",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r10"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q18",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q19",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q20",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q21",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q22",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r10"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q23",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q24",
+          "category": "system-design",
+          "requirement_ids": [
+            "r12"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q25",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2",
+            "r12"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q26",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q27",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q28",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q29",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        },
+        {
+          "id": "q30",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        }
+      ]
+    },
+    {
+      "id": "qa-05-doctolib-praktikum-inside-sales-de",
+      "company": "Doctolib",
+      "roleTitle": "Praktikant:in im Bereich SDR im Inside Sales",
+      "seniority": "intern",
+      "days": 3,
+      "designRoundExpected": false,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "Enthusiasm for sales and desire to gain practical sales experience",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Strong communication skills and German language skills (C1)",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Good English language skills (at least B2)",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Proactive approach to people and relationship building",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Structured, independent way of working and willingness to learn",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "Motivation to achieve goals with the team and grow",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r7",
+          "text": "Initial experience in sales, customer service, or communication-intensive roles",
+          "kind": "domain",
+          "priority": "nice"
+        },
+        {
+          "id": "r8",
+          "text": "Interest in digital business models or healthcare",
+          "kind": "domain",
+          "priority": "nice"
+        },
+        {
+          "id": "r9",
+          "text": "Initial experience with CRM systems like Salesforce",
+          "kind": "technical",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q8",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q9",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q11",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q12",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q13",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q14",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q15",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q16",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q17",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q18",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q19",
+          "category": "system-design",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q20",
+          "category": "system-design",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q21",
+          "category": "system-design",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q22",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q23",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q24",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q25",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-06-single-line-long",
+      "company": "Acme",
+      "roleTitle": "Backend Engineer",
+      "seniority": "unspecified",
+      "days": 3,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "5+ years of Go in production",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Deep PostgreSQL experience",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Kafka experience",
+          "kind": "technical",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r1",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r1",
+            "r2",
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q7",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q8",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q9",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r2",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q11",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q12",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q13",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q14",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q15",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        },
+        {
+          "id": "q16",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        }
+      ]
+    },
+    {
+      "id": "qa-07-unreachable-port",
+      "company": "127",
+      "roleTitle": "Frontend Engineer",
+      "seniority": "unspecified",
+      "days": 2,
+      "designRoundExpected": null,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "3+ years of React and TypeScript",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Experience writing accessible UI",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Experience with Next.js",
+          "kind": "technical",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q8",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q9",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-08-invalid-url-60-days",
+      "company": "the company",
+      "roleTitle": "Data Engineer",
+      "seniority": "unspecified",
+      "days": 60,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "Strong SQL skills",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Experience building batch pipelines with Airflow",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Comfortable mentoring analysts",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Snowflake",
+          "kind": "technical",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q7",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q8",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q9",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q10",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q11",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q12",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q13",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-09-metadata-ip",
+      "company": "169",
+      "roleTitle": "Site Reliability Engineer",
+      "seniority": "unspecified",
+      "days": 1,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "On-call experience for production systems",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Knowledge of Linux internals",
+          "kind": "technical",
+          "priority": "must"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        }
+      ]
+    },
+    {
+      "id": "qa-10-nohire-no-slash-1-day",
+      "company": "Localhost",
+      "roleTitle": "Product Designer",
+      "seniority": "unspecified",
+      "days": 1,
+      "designRoundExpected": false,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "Portfolio showing shipped product work",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Proficient with Figma",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Experience conducting usability tests",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Basic HTML and CSS knowledge",
+          "kind": "technical",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r2",
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r3",
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r1",
+            "r2",
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q9",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q10",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q11",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q12",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-11-behavioural-coverage-60",
+      "company": "Localhost",
+      "roleTitle": "Engineering Manager, Payments",
+      "seniority": "lead",
+      "days": 60,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "Managed a team of at least 5 engineers",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Mentored junior engineers with proven track record",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Strong written communication with non-technical stakeholders",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Experience with payment systems (PCI DSS)",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Hands‑on Java or Kotlin",
+          "kind": "technical",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r4",
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r4",
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q5",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q6",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q8",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q9",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q11",
+          "category": "system-design",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q12",
+          "category": "system-design",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q13",
+          "category": "system-design",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q14",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q15",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q16",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q17",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-19-odk-senior-product-manager",
+      "company": "ODK",
+      "roleTitle": "Senior Product Manager",
+      "seniority": "senior",
+      "days": 7,
+      "designRoundExpected": false,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "substantial experience managing complex B2B or technical products",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "experience with open source, self‑hosted software, and small fully remote teams",
+          "kind": "domain",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q5",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q6",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q8",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q9",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q11",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-01-two-line-stub",
+      "company": "Acme",
+      "roleTitle": "Backend Engineer",
+      "seniority": "unspecified",
+      "days": 5,
+      "designRoundExpected": null,
+      "requirements": [],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-02-injection-jd",
+      "company": "Localhost",
+      "roleTitle": "Senior Platform Engineer",
+      "seniority": "senior",
+      "days": 3,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "5+ years building services in Go",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Experience operating Kubernetes in production",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "10 years of COBOL on IBM mainframes",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Active TS/SCI security clearance",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Terraform",
+          "kind": "technical",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q9",
+          "category": "technical",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "technical",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q11",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q12",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q13",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q14",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q15",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q16",
+          "category": "system-design",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q17",
+          "category": "system-design",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q18",
+          "category": "system-design",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q19",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q20",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2",
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q21",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q22",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q23",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q24",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-03-german-jd",
+      "company": "Localhost",
+      "roleTitle": "Senior Backend-Entwickler (m/w/d)",
+      "seniority": "senior",
+      "days": 7,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "5+ years of Go development experience",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Solid knowledge of Kubernetes and PostgreSQL",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Excellent German and English language skills",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Experience with Rust",
+          "kind": "technical",
+          "priority": "nice"
+        },
+        {
+          "id": "r5",
+          "text": "Knowledge of banking domain",
+          "kind": "domain",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q9",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q10",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q11",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q12",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q13",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q14",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q15",
+          "category": "system-design",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q16",
+          "category": "system-design",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q17",
+          "category": "system-design",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q18",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q19",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q20",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q21",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-04-no-requirements",
+      "company": "Nohire Labs",
+      "roleTitle": "Unspecified role",
+      "seniority": "unspecified",
+      "days": 2,
+      "designRoundExpected": null,
+      "requirements": [],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        },
+        {
+          "id": "q4",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        }
+      ]
+    },
+    {
+      "id": "qa-05-cue-traps",
+      "company": "Strong Compute",
+      "roleTitle": "Backend Engineer, Strong Compute Partnerships Team",
+      "seniority": "unspecified",
+      "days": 4,
+      "designRoundExpected": true,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "No degree required",
+          "kind": "technical",
+          "priority": "nice"
+        },
+        {
+          "id": "r2",
+          "text": "Familiarity with Terraform",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Kubernetes experience",
+          "kind": "technical",
+          "priority": "nice"
+        },
+        {
+          "id": "r4",
+          "text": "4+ years PostgreSQL experience",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Hands-on PostgreSQL production experience",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "Exposure to Rust",
+          "kind": "technical",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r4",
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q9",
+          "category": "technical",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "technical",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q11",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q12",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q13",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q14",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q15",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q16",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-06-airbnb-gestionnaire-reclamations-fr",
+      "company": "Airbnb",
+      "roleTitle": "gestionnaire des réclamations complexes",
+      "seniority": "unspecified",
+      "days": 30,
+      "designRoundExpected": false,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "10+ ans d’expérience en couverture de réclamations d’assurance et litige",
+          "kind": "domain",
+          "priority": "nice"
+        },
+        {
+          "id": "r2",
+          "text": "Solide expérience en polices d'assurance",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Connaissance approfondie de la résolution de dossiers complexes",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Compétences analytiques et de résolution de problèmes",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Excellentes compétences en communication verbale et écrite",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "Capacité à influencer les équipes transversales à l’échelle mondiale",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r7",
+          "text": "Compétence démontrée en résolution de problèmes complexes",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r8",
+          "text": "Compétence éprouvée en négociation dans des situations difficiles",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r9",
+          "text": "Expérience avec parties prenantes internes et fournisseurs tiers",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r10",
+          "text": "Établir des partenariats et participer aux revues de réclamations importantes",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r11",
+          "text": "Disponibilité sur appel, week‑ends et soirées",
+          "kind": "behavioural",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r1",
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r2",
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r3",
+            "r7"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q9",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q10",
+          "category": "technical",
+          "requirement_ids": [
+            "r1",
+            "r2",
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q11",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q12",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5",
+            "r6"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q13",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q14",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q15",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r8",
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q16",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q17",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r9",
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q18",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r10"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q19",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r10",
+            "r6"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q20",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r10",
+            "r8"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q21",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r11"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q22",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r11",
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q23",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q24",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q25",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q26",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        }
+      ]
+    },
+    {
+      "id": "qa-07-sumup-subgerente-ventas-es",
+      "company": "SumUp Chile",
+      "roleTitle": "líder de líderes",
+      "seniority": "lead",
+      "days": 2,
+      "designRoundExpected": false,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "Solid experience leading sales leaders, proven track record in training and evaluating field managers.",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Build replicable leadership structures so each Team Leader works autonomously with accountability.",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Expert in pipeline, forecast, KPIs, using data to drive decisions and coaching conversations.",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Comfortable in high-pressure environments, clear communicator of expectations, quick to implement changes.",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Advanced CRM and route/activity management tool usage.",
+          "kind": "technical",
+          "priority": "must"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q5",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q6",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q8",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q9",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q10",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q11",
+          "category": "system-design",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q12",
+          "category": "system-design",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q13",
+          "category": "system-design",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q14",
+          "category": "system-design",
+          "requirement_ids": [
+            "r3",
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q15",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q16",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q17",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q18",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "qa-08-hellofresh-kitchen-associate",
+      "company": "Factor_",
+      "roleTitle": "Kitchen Associate",
+      "seniority": "unspecified",
+      "days": 1,
+      "designRoundExpected": false,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "Must be able to stand and work 8-12 hours per shift",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Must be able to lift up to 50 lbs",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Must be able to work in a cold prep area at 35°F",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Must be able to withstand temperatures 30-80°F",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Must have a high school diploma or equivalent",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "Must have attention to detail and quality control",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r7",
+          "text": "Must be able to work as part of a team and individually",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r8",
+          "text": "Must be able to read, write, and understand English",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r9",
+          "text": "Must be at least 18 years old",
+          "kind": "behavioural",
+          "priority": "must"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q3",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q5",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q6",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q8",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q9",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q10",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r1",
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q11",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r6",
+            "r7"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q12",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r3",
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q13",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q14",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        },
+        {
+          "id": "q15",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 3
+        },
+        {
+          "id": "q16",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        }
+      ]
+    },
+    {
+      "id": "qa-09-oscar-nurse-practitioner-virtual-care",
+      "company": "Oscar Medical Group",
+      "roleTitle": "Bilingual Nurse Practitioner or Physician Assistant",
+      "seniority": "unspecified",
+      "days": 5,
+      "designRoundExpected": false,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "NP or PA graduate from accredited program",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Board Certification (ANCC)",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Bilingual in Spanish (read, write, speak)",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Licensed in at least 3 of FL, TX, OH, NJ, GA",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Willing to obtain additional state licenses via vendor",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "3+ years urgent care/ER/outpatient family medicine experience",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r7",
+          "text": "2+ years telehealth experience",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r8",
+          "text": "Work minimum 16 hours per week",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r9",
+          "text": "4‑hour shifts 5pm‑12am ET, occasional weekends",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r10",
+          "text": "Reside in specified states",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r11",
+          "text": "Licensed in other OMG states (AZ, CO, CT, IA, IL, KS, MI, NC, NJ, NY, OH, OK, PA, VA)",
+          "kind": "technical",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r3"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q7",
+          "category": "technical",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q8",
+          "category": "technical",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q9",
+          "category": "technical",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "technical",
+          "requirement_ids": [
+            "r10"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q11",
+          "category": "technical",
+          "requirement_ids": [
+            "r11"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q12",
+          "category": "technical",
+          "requirement_ids": [
+            "r3",
+            "r6",
+            "r7"
+          ],
+          "difficulty": 3
+        }
+      ]
+    },
+    {
+      "id": "random-vercel",
+      "company": "Vercel",
+      "roleTitle": "Sr Manager, Partner Programs",
+      "seniority": "senior",
+      "days": 3,
+      "designRoundExpected": false,
+      "requirements": [
+        {
+          "id": "r1",
+          "text": "At least 6 years in partnerships, partner programs, ecosystem enablement or GTM strategy, preferably AI/dev tooling.",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r2",
+          "text": "Proven track record of building and scaling partner programs.",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r3",
+          "text": "Strong understanding of developer, modern web, and AI agent ecosystems.",
+          "kind": "domain",
+          "priority": "must"
+        },
+        {
+          "id": "r4",
+          "text": "Experience with PRM systems, marketplaces, or partner ecosystem tooling.",
+          "kind": "technical",
+          "priority": "must"
+        },
+        {
+          "id": "r5",
+          "text": "Ability to turn ambiguous strategy into concrete, scalable programs.",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r6",
+          "text": "Strong cross‑functional leadership, aligning teams without direct authority.",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r7",
+          "text": "Data‑driven approach to evaluating program performance and partner feedback.",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r8",
+          "text": "Clear, confident communicator who creates tools, content, and playbooks for others.",
+          "kind": "behavioural",
+          "priority": "must"
+        },
+        {
+          "id": "r9",
+          "text": "Experience designing governance, tiering, or certification frameworks for multiple partner types.",
+          "kind": "technical",
+          "priority": "nice"
+        },
+        {
+          "id": "r10",
+          "text": "Exposure to AI/ML, devtools, cloud, or SaaS startup ecosystems.",
+          "kind": "domain",
+          "priority": "nice"
+        },
+        {
+          "id": "r11",
+          "text": "Experience standing up or migrating PRM/marketplace infrastructure.",
+          "kind": "technical",
+          "priority": "nice"
+        }
+      ],
+      "questions": [
+        {
+          "id": "q1",
+          "category": "technical",
+          "requirement_ids": [
+            "r1"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q2",
+          "category": "technical",
+          "requirement_ids": [
+            "r2"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q3",
+          "category": "technical",
+          "requirement_ids": [
+            "r3",
+            "r10"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q4",
+          "category": "technical",
+          "requirement_ids": [
+            "r4"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q5",
+          "category": "technical",
+          "requirement_ids": [
+            "r9"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q6",
+          "category": "technical",
+          "requirement_ids": [
+            "r11"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q7",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q8",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r6"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q9",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r7"
+          ],
+          "difficulty": 2
+        },
+        {
+          "id": "q10",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r8"
+          ],
+          "difficulty": 1
+        },
+        {
+          "id": "q11",
+          "category": "behavioural",
+          "requirement_ids": [
+            "r5",
+            "r6",
+            "r7"
+          ],
+          "difficulty": 3
+        },
+        {
+          "id": "q12",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 1
+        },
+        {
+          "id": "q13",
+          "category": "company-fit",
+          "requirement_ids": [],
+          "difficulty": 2
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@ import { AppError } from "../lib/errors.js";
 import { assembleKit, assignFlashcardIds, assignQuestionIds, pruneUnreferenced } from "./canonical.js";
 import { allocateSchedule } from "./schedule.js";
 import { runCoverageLoop } from "./steps/coverageLoop.js";
+import { sanityWarnings } from "./steps/sanityCheck.js";
 import { extractRequirements } from "./steps/extractRequirements.js";
 import { findHiringPage } from "./steps/findHiringPage.js";
 import { generateFlashcards } from "./steps/generateFlashcards.js";
@@ -256,6 +257,16 @@ export async function runPipeline(
 
   const questions = assignQuestionIds(covered.questions);
   const flashcards = assignFlashcardIds(flashcardDrafts);
+
+  // Rules upstream should have prevented these; if one slipped through, say so.
+  for (const warning of sanityWarnings({
+    roleTitle: role.title,
+    hiringProcess,
+    requirements: role.requirements,
+    questions,
+  })) {
+    warnings.add(warning);
+  }
 
   const schedule = await step("schedule", () =>
     allocateSchedule({ requirements: role.requirements, questions, days: parsed.days }),

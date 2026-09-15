@@ -92,6 +92,7 @@ describe("routeRequirements", () => {
       "Enterprise Account Executive",
       "Nurse Practitioner",
       "Technical Recruiter",
+      "Platform Product Manager",
     ]) {
       const routed = routeRequirements(
         context({
