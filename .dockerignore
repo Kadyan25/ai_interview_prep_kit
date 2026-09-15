@@ -1,0 +1,25 @@
+node_modules
+**/node_modules
+.git
+.next
+apps/web
+coverage
+dist
+.cache
+*.tsbuildinfo
+
+# Secrets and local-only material must never reach an image layer.
+.env
+.env.*
+brief.md
+*.pdf
+session.md
+issues.md
+handoff.md
+architecture.md
+build-plan.md
+CLAUDE.md
+scratchpad
+out.json
+kits.json
+*.out.json
