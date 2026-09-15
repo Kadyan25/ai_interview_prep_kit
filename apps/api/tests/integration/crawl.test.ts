@@ -142,6 +142,31 @@ describe("crawl against a real fixture site", () => {
     expect(home?.text).toContain("Northwind Rail builds scheduling software");
   });
 
+  it("does not read a sign-in page as company research", async () => {
+    // A probe for /interview-process on a real site redirected to its login page.
+    const walled = (async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.includes("robots.txt")) return new Response("", { status: 404 });
+      const body = url.includes("/login")
+        ? "<html><head><title>Log in</title></head><body><main><p>Sign in to continue to your dashboard. Enter the email address you use at work and we will send you a link.</p></main></body></html>"
+        : `<html><head><title>Home</title></head><body><main><p>${"Readable body copy. ".repeat(20)}</p><a href="/login?next=/interview-process">Interview process</a></main></body></html>`;
+      return new Response(body, { status: 200, headers: { "Content-Type": "text/html" } });
+    }) as typeof fetch;
+
+    const options = { ...fetchOptions(), fetchImpl: walled };
+    const result = await crawl("https://walled.test/", {
+      maxPages: 5,
+      maxDepth: 2,
+      fetch: options,
+      robots: new RobotsCache(options),
+      politeDelayMs: 0,
+      seeds: async () => [],
+    });
+
+    expect(result.pages.some((p) => p.url.includes("/login"))).toBe(false);
+    expect(result.skipped.some((s) => s.reason.includes("sign-in wall"))).toBe(true);
+  });
+
   it("returns unreachable rather than throwing for a dead host", async () => {
     const options = fetchOptions();
     const result = await crawl("http://127.0.0.1:1/", {

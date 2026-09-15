@@ -143,6 +143,13 @@ export function sectionOf(raw: string, startUrl: string): string | null {
   }
 }
 
+const SIGN_IN_PATH = /\/(login|log-in|signin|sign-in|signup|sign-up|auth|sso|account\/login)(\/|$|\?)/i;
+const SIGN_IN_TITLE = /^(log ?in|sign ?in|sign ?up|register|authentication)\b/i;
+
+function isSignInWall(url: string, title: string): boolean {
+  return SIGN_IN_PATH.test(url) || SIGN_IN_TITLE.test(title.trim());
+}
+
 type Candidate = { url: string; depth: number; score: number };
 
 /**
@@ -211,6 +218,12 @@ export async function crawl(startUrl: string, options: CrawlOptions): Promise<Cr
     }
 
     const extracted = extractContent(result.html, result.url);
+    if (isSignInWall(result.url, extracted.title)) {
+      // Probing /interview-process on vercel.com redirects to the login page, and
+      // reading that as company research wastes a page of the budget.
+      skipped.push({ url: result.url, reason: "page is a sign-in wall" });
+      continue;
+    }
     if (extracted.text.length < 120) {
       skipped.push({ url: result.url, reason: "page had almost no readable text" });
     } else {
