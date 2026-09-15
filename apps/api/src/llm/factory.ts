@@ -33,6 +33,7 @@ export function createLlmFromEnv(): LlmClient {
 
   return createLlmClient(providers, {
     concurrency: env.LLM_CONCURRENCY,
+    timeoutMs: env.LLM_TIMEOUT_MS,
     onRetry: ({ provider, attempt, waitMs, reason }) =>
       logger.warn({ provider, attempt, waitMs, reason }, "llm retry"),
   });

@@ -236,3 +236,37 @@ describe("llm client", () => {
     expect(client.providers()).toEqual(["gemini", "groq"]);
   });
 });
+
+describe("a provider that never answers", () => {
+  /** Hangs for ever, like the request that stalled a live batch for three hours. */
+  function hangingProvider(name: ProviderName) {
+    let started = 0;
+    const provider: LlmProvider = {
+      name,
+      complete: () => {
+        started += 1;
+        return new Promise<string>(() => undefined);
+      },
+    };
+    return { provider, calls: () => started };
+  }
+
+  it("gives up on it and falls back to the other provider", async () => {
+    const hanging = hangingProvider("gemini");
+    const { provider: working } = scriptedProvider("groq", ['{"answer":"from the fallback"}']);
+    const client = createLlmClient([hanging.provider, working], { ...options, timeoutMs: 20, maxAttempts: 2 });
+
+    const result = await client.generateJson({ task: "t", system: "s", user: "u", schema });
+    expect(result.answer).toBe("from the fallback");
+    expect(hanging.calls()).toBeGreaterThan(0);
+  });
+
+  it("fails with LLM_UNAVAILABLE rather than hanging when every provider stalls", async () => {
+    const hanging = hangingProvider("groq");
+    const client = createLlmClient([hanging.provider], { ...options, timeoutMs: 20, maxAttempts: 2 });
+
+    const started = Date.now();
+    await expect(client.generateJson({ task: "t", system: "s", user: "u", schema })).rejects.toBeInstanceOf(AppError);
+    expect(Date.now() - started).toBeLessThan(2000);
+  });
+});

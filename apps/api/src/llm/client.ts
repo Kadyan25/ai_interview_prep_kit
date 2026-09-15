@@ -15,6 +15,8 @@ export type LlmClientOptions = {
   /** Minimum spacing between call starts. Free tiers count requests per minute. */
   minGapMs?: number;
   maxAttempts?: number;
+  /** Hard ceiling on one provider call, enforced here rather than trusting an SDK. */
+  timeoutMs?: number;
   /** Consecutive rate-limit hits on the primary before falling back. */
   failoverThreshold?: number;
   failoverWindowMs?: number;
@@ -43,6 +45,7 @@ export function createLlmClient(
     concurrency = 2,
     minGapMs = 1500,
     maxAttempts = 5,
+    timeoutMs = 60_000,
     failoverThreshold = 3,
     failoverWindowMs = 60_000,
     failoverCooldownMs = 120_000,
@@ -62,6 +65,29 @@ export function createLlmClient(
   let consecutiveRateLimits = 0;
   let firstRateLimitAt = 0;
   let primaryPausedUntil = 0;
+
+  /**
+   * A provider call that cannot outlast the timeout. Both SDKs take a timeout
+   * option, and neither can be relied on: a live run had one request hang for
+   * three hours, which blew a fifteen-minute batch budget on a single case. A
+   * timeout is a transient failure, so the retry and failover path handles it.
+   */
+  async function callWithTimeout(provider: LlmProvider, request: Parameters<LlmProvider["complete"]>[0]): Promise<string> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        provider.complete(request),
+        new Promise<never>((_resolve, reject) => {
+          timer = setTimeout(
+            () => reject(new LlmHttpError(provider.name, `no reply within ${timeoutMs}ms`)),
+            timeoutMs,
+          );
+        }),
+      ]);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
 
   async function spaceOut(): Promise<void> {
     const previous = gate;
@@ -131,7 +157,7 @@ export function createLlmClient(
       for (let attempt = 0; attempt < attemptsEach; attempt += 1) {
         await spaceOut();
         try {
-          const text = await provider.complete({ system, user, maxOutputTokens });
+          const text = await callWithTimeout(provider, { system, user, maxOutputTokens });
           noteSuccess(provider);
           return text;
         } catch (error) {
