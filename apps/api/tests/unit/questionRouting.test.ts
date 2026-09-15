@@ -53,19 +53,58 @@ describe("routeRequirements", () => {
     expect(routed["system-design"].length).toBeGreaterThan(0);
   });
 
-  it("asks them when most of the posting is technical craft", () => {
+  it("asks them for an unfamiliar title whose work is plainly systems work", () => {
     const routed = routeRequirements(
       context({
         roleTitle: "Solutions Consultant",
         requirements: [
           requirement("r1", "technical", "Kubernetes in production"),
-          requirement("r2", "technical", "Designing APIs for scale"),
-          requirement("r3", "technical", "Terraform and CI pipelines"),
-          requirement("r4", "behavioural"),
+          requirement("r2", "technical", "API design for high throughput services"),
+          requirement("r3", "behavioural"),
         ],
       }),
     );
     expect(routed["system-design"].length).toBeGreaterThan(0);
+  });
+
+  it("asks none for a product designer, whose craft words include 'design systems'", () => {
+    // Live from the deployed app: a Discord product design role got 7 of them,
+    // because the model types Figma and design systems as technical requirements.
+    const routed = routeRequirements(
+      context({
+        roleTitle: "Senior Product Designer, Consumer Revenue",
+        requirements: [
+          requirement("r1", "technical", "Expert in Figma and prototyping"),
+          requirement("r2", "technical", "Built and maintained design systems at scale"),
+          requirement("r3", "technical", "Designing consumer subscription flows"),
+          requirement("r4", "domain", "Consumer monetisation experience"),
+          requirement("r5", "behavioural", "Partners closely with engineering"),
+        ],
+      }),
+    );
+    expect(routed["system-design"]).toEqual([]);
+  });
+
+  it("asks none for other non-engineering roles, however senior", () => {
+    for (const roleTitle of [
+      "Senior UX Researcher",
+      "Director of Marketing",
+      "Enterprise Account Executive",
+      "Nurse Practitioner",
+      "Technical Recruiter",
+    ]) {
+      const routed = routeRequirements(
+        context({
+          roleTitle,
+          requirements: [
+            requirement("r1", "technical", "Design and run experiments"),
+            requirement("r2", "technical", "Own the systems that track performance"),
+            requirement("r3", "technical", "Build dashboards"),
+          ],
+        }),
+      );
+      expect(routed["system-design"], roleTitle).toEqual([]);
+    }
   });
 });
 

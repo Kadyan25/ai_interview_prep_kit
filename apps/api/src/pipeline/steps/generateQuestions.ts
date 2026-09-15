@@ -20,7 +20,10 @@ const questionsSchema = z.object({
     .default([]),
 });
 
-const SYSTEM_DESIGN_HINT = /architect|scal|design|distributed|system|infrastructure|platform|throughput|latency/i;
+// Software-systems language only. "design" and "system" on their own matched a
+// product designer's "design systems" experience and produced a design round.
+const SYSTEM_DESIGN_HINT =
+  /system design|software architect|architecture|distributed|micro-?service|scalab|high availability|throughput|latency|api design|data pipeline|infrastructure|kubernetes|database schema/i;
 const SENIOR_ENOUGH = /mid|senior|staff|lead|principal/i;
 
 export type QuestionContext = {
@@ -74,18 +77,28 @@ export function routeRequirements(
 const TECHNICAL_ROLE =
   /engineer|developer|programmer|architect|sre|devops|platform|infrastructure|data scientist|data engineer|machine learning|\bml\b|\bai\b engineer|security|qa|test automation|technical lead|cto|scientist/i;
 
+// Crafts with their own "design" vocabulary that is nothing to do with system design.
+const NON_ENGINEERING_ROLE =
+  /designer|design (lead|manager|director)|researcher|marketing|sales|account (executive|manager)|recruit|people|finance|legal|content|writer|nurse|physician|teacher|chef|kitchen|driver|support specialist/i;
+
 /**
- * Whether a design round is plausible for this role: the title says so, or the
- * company's own hiring page mentions one, or most of what the posting asks for is
- * technical craft rather than domain or people skills.
+ * Whether a system-design round is plausible for this role. The company's own
+ * process decides it when they publish one; otherwise the title must be an
+ * engineering one, or the posting must actually talk about building systems.
  */
 function buildsSystems(context: QuestionContext): boolean {
-  if (TECHNICAL_ROLE.test(context.roleTitle)) return true;
   if (context.hiringProcess && /system design|architecture (interview|round)/i.test(context.hiringProcess)) {
     return true;
   }
-  const technical = context.requirements.filter((r) => r.kind === "technical").length;
-  return technical >= 3 && technical >= context.requirements.length / 2;
+  if (NON_ENGINEERING_ROLE.test(context.roleTitle)) return false;
+  if (TECHNICAL_ROLE.test(context.roleTitle)) return true;
+
+  // An unfamiliar title still qualifies if the work itself is systems work: not
+  // "mostly technical requirements", which counts a designer's tools as technical.
+  const systemsWork = context.requirements.filter(
+    (r) => r.kind === "technical" && SYSTEM_DESIGN_HINT.test(r.text),
+  ).length;
+  return systemsWork >= 2;
 }
 
 /**
