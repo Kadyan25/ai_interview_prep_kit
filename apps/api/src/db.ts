@@ -18,14 +18,36 @@ export function dbNameFrom(uri: string): string {
   }
 }
 
+const CONNECT_ATTEMPTS = 4;
+const RETRY_DELAY_MS = 3_000;
+
+/**
+ * Retried, because a free-tier database is not always awake when its service is.
+ * Atlas pauses idle clusters and takes a moment to accept connections after a
+ * network rule changes; giving up on the first refusal turns that into an outage
+ * that only a redeploy clears.
+ */
 export async function connectDb(): Promise<void> {
   const { MONGODB_URI } = serverEnv();
   mongoose.set("strictQuery", true);
-  await mongoose.connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 10_000,
-    dbName: dbNameFrom(MONGODB_URI),
-  });
-  logger.info({ db: mongoose.connection.name }, "mongo connected");
+
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      await mongoose.connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 10_000,
+        dbName: dbNameFrom(MONGODB_URI),
+      });
+      logger.info({ db: mongoose.connection.name, attempt }, "mongo connected");
+      return;
+    } catch (error) {
+      if (attempt >= CONNECT_ATTEMPTS) throw error;
+      logger.warn(
+        { attempt, of: CONNECT_ATTEMPTS, err: error instanceof Error ? error.message : String(error) },
+        "mongo not reachable, retrying",
+      );
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * attempt));
+    }
+  }
 }
 
 export async function disconnectDb(): Promise<void> {
