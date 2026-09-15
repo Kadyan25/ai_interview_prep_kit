@@ -1,4 +1,6 @@
+import net from "node:net";
 import { AppError } from "../../lib/errors.js";
+import { sanitiseJd } from "./sanitiseJd.js";
 import type { PipelineInput, Warnings } from "../types.js";
 
 export const THIN_JD_CHARS = 400;
@@ -45,16 +47,31 @@ function urlProblem(raw: string): string | null {
   return null;
 }
 
-function guessCompanyFromHost(hostname: string): string {
+/**
+ * A host only names a company when it is a real domain. "127.0.0.1" and
+ * "localhost" gave kits a company called "127" and sent "Localhost" to a paid
+ * search, so those fall back to the neutral label.
+ */
+function guessCompanyFromHost(hostname: string): string | null {
+  if (net.isIP(hostname) !== 0 || !hostname.includes(".")) return null;
   const bare = hostname.replace(/^www\./, "");
   const label = bare.split(".")[0] ?? bare;
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 export function parseInput(input: PipelineInput, warnings: Warnings): ParsedInput {
-  const jd = input.jd?.trim() ?? "";
+  const supplied = input.jd?.trim() ?? "";
+  // Done before anything else reads the posting, so no later step — including the
+  // verbatim-evidence check — can be steered by text aimed at the model.
+  const sanitised = sanitiseJd(supplied);
+  const jd = sanitised.text.trim();
   if (jd.length === 0) {
     throw new AppError("INVALID_INPUT", "The job description is empty.");
+  }
+  if (sanitised.removed.length > 0) {
+    warnings.add(
+      `${sanitised.removed.length} line${sanitised.removed.length === 1 ? "" : "s"} in the posting tried to give instructions rather than describe the job, so ${sanitised.removed.length === 1 ? "it was" : "they were"} ignored.`,
+    );
   }
   if (jd.length > MAX_JD_CHARS) {
     throw new AppError(
@@ -94,7 +111,7 @@ export function parseInput(input: PipelineInput, warnings: Warnings): ParsedInpu
     } else {
       const parsed = new URL(withScheme(rawCompanyUrl));
       companyUrl = parsed.toString();
-      companyLabel = guessCompanyFromHost(parsed.hostname);
+      companyLabel = guessCompanyFromHost(parsed.hostname) ?? companyLabel;
     }
   }
 
