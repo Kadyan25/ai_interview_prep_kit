@@ -153,8 +153,8 @@ Two decisions hold this together.
 
 **The pipeline is one function with injected dependencies.** `runPipeline(input, deps)` returns a
 kit. It never touches Mongo, Express or `process.env`. The web app's job runner and the batch CLI
-call it identically, so the thing the graders run and the thing the user clicks are the same code
-path, and the whole pipeline is testable offline with a stub model.
+call it identically, so the thing the batch runner executes and the thing the user clicks are the
+same code path, and the whole pipeline is testable offline with a stub model.
 
 **The browser and the server share one reducer.** Edits are operations, not documents; the same
 `applyOps` runs in both places. More on that below.
@@ -195,7 +195,7 @@ and it makes the per-category regeneration in the builder impossible.
 
 ## Not inventing things
 
-The brief is explicit that inventing requirements is worse than reporting few, so this is enforced
+The core design principle: inventing requirements is worse than reporting few, so this is enforced
 in code rather than asked for in a prompt.
 
 The model must return a **verbatim quote** from the posting for every requirement it reports. Then:
@@ -404,7 +404,7 @@ fills the gap.** In a batch, `failed` is used only when no kit could be produced
 such case is an empty posting. Everything below still produces an `ok` kit, with the gap written into
 `kit.warnings` and shown in the UI.
 
-### The eight cases from the brief
+### Eight edge cases handled explicitly
 
 | Case | What happens |
 |---|---|
@@ -452,15 +452,15 @@ Every fetched page and the pasted posting are treated as text written by someone
 
 ## Stack, and why
 
-Next.js, Express, MongoDB and TypeScript throughout, which is the stack the brief prefers, so none of
-the reasoning budget goes on justifying a substitution.
+Next.js, Express, MongoDB and TypeScript throughout — a stack well suited to a long-running, stateful
+pipeline with one shared contract between the browser, the API and the CLI.
 
 | Choice | Reason |
 |---|---|
 | npm workspaces | The kit contract is one Zod schema in `packages/shared`, imported by the API, the CLI, the tests and the browser. One definition, no drift. |
 | Express, not Next route handlers | Generation is a ninety-second in-process job. It needs a long-lived server, which a serverless function is not. |
 | MongoDB | A kit is one nested document that is read and written whole. |
-| Groq `openai/gpt-oss-120b` primary, Gemini `gemini-3.5-flash` fallback | A five-case batch is around fifty model calls. Google's free tier allows twenty generate-content requests per day on a flash model, so Gemini as primary could not finish the run the graders do. Groq's free tier carries it and answers in about a third of the time. Both are configured; `LLM_PRIMARY` swaps them. |
+| Groq `openai/gpt-oss-120b` primary, Gemini `gemini-3.5-flash` fallback | A five-case batch is around fifty model calls. Google's free tier allows twenty generate-content requests per day on a flash model, so Gemini as primary could not finish a full batch run. Groq's free tier carries it and answers in about a third of the time. Both are configured; `LLM_PRIMARY` swaps them. |
 | Zod | The Appendix A shape, the referential rules between ids, the operation payloads and the env are all validated by the same library. |
 | `tsx` at runtime | The shared package ships TypeScript source, so there is no build step between editing the contract and running the CLI. |
 | No queue, no Redis, no websockets | One in-process job at a time with progress in Mongo and two-second polling. Two services instead of four, and the failure mode is easy to reason about. |
